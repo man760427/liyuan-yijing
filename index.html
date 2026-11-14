@@ -389,6 +389,15 @@
 
             <!-- 結果呈現區 (本卦、互卦、變卦) -->
             <div id="result-area">
+                <!-- 多卦比較快速切換列（從比較模式進入詳盤時顯示） -->
+                <div id="compare-quick-switcher" class="hidden mb-3 bg-indigo-50/90 border border-indigo-300 rounded-lg px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <span class="text-xs font-bold text-indigo-950 shrink-0">⚖️ 比較切換：</span>
+                        <div id="compare-switcher-pills" class="flex items-center gap-1.5 flex-wrap"></div>
+                    </div>
+                    <button type="button" onclick="openCompareModal()" class="px-3 py-1 bg-indigo-700 hover:bg-indigo-800 text-white text-xs font-semibold rounded shadow-xs transition cursor-pointer shrink-0 w-fit">⚖️ 回到並排比較</button>
+                </div>
+
                 <!-- 事後也可隨時修改問事題目列 -->
                 <div id="active-question-banner" class="hidden mb-3 bg-amber-50/90 border border-amber-300 rounded-lg px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
                     <div class="flex items-center gap-2 flex-1">
@@ -1229,6 +1238,7 @@
                     if (t === 'records') {
                         document.getElementById('result-panel').classList.add('hidden');
                         const qb = document.getElementById('active-question-banner'); if (qb) qb.classList.add('hidden');
+                        const cq = document.getElementById('compare-quick-switcher'); if (cq) cq.classList.add('hidden');
                         const mp = document.getElementById('master-analysis-panel'); if (mp) mp.classList.add('hidden');
                         const sim = document.getElementById('similar-records-panel'); if (sim) sim.classList.add('hidden');
                         const sp = document.getElementById('wuxing-summary-panel'); if (sp) sp.classList.add('hidden');
@@ -1318,6 +1328,8 @@
             document.getElementById('result-panel').classList.add('hidden');
             const activeQBanner = document.getElementById('active-question-banner');
             if (activeQBanner) activeQBanner.classList.add('hidden');
+            const cmpSwitcher = document.getElementById('compare-quick-switcher');
+            if (cmpSwitcher) cmpSwitcher.classList.add('hidden');
             const similarPanel = document.getElementById('similar-records-panel');
             if (similarPanel) similarPanel.classList.add('hidden');
             const summaryPanel = document.getElementById('wuxing-summary-panel');
@@ -1637,12 +1649,12 @@
                 const low = trigramData[lowerIdx];
                 const buildSideTag = (g, ty) => {
                     const tyMark = ty === "[體]"
-                        ? `<span class="text-[10px] px-1 py-0.2 bg-emerald-700 text-white rounded font-bold mt-0.5">體</span>`
-                        : (ty === "[用]" ? `<span class="text-[10px] px-1 py-0.2 bg-rose-700 text-white rounded font-bold mt-0.5">用</span>` : "");
+                        ? `<span class="text-xs sm:text-sm px-2 py-0.5 bg-emerald-700 text-white rounded-md font-extrabold mt-1 shadow-xs">體</span>`
+                        : (ty === "[用]" ? `<span class="text-xs sm:text-sm px-2 py-0.5 bg-rose-700 text-white rounded-md font-extrabold mt-1 shadow-xs">用</span>` : "");
                     return `
-                        <div class="flex flex-col items-center justify-center shrink-0 w-12 sm:w-14 border-l-2 border-amber-200/80 pl-1.5 py-0.5">
-                            <span class="font-extrabold text-sm sm:text-base px-1.5 py-0.5 rounded border shadow-2xs ${wuxingBadgeColors[g.wuxing]}">${g.name}</span>
-                            <span class="text-[10px] font-bold ${wuxingColors[g.wuxing]} mt-0.5">${g.yyWuxing}</span>
+                        <div class="flex flex-col items-center justify-center shrink-0 w-16 sm:w-20 border-l-2 border-amber-200/80 pl-2 py-1">
+                            <span class="font-extrabold text-xl sm:text-2xl leading-tight px-2.5 py-0.5 rounded-lg border shadow-xs ${wuxingBadgeColors[g.wuxing]}">${g.name}</span>
+                            <span class="text-xs sm:text-sm font-extrabold ${wuxingColors[g.wuxing]} mt-1">${g.yyWuxing}</span>
                             ${tyMark}
                         </div>
                     `;
@@ -1707,6 +1719,7 @@
                     updateRestoredBtn.classList.toggle('hidden', !currentRestoredRecordId);
                 }
             }
+            renderCompareQuickSwitcher();
             document.getElementById('save-action-panel').classList.remove('hidden');
             document.getElementById('save-action-panel').classList.add('flex');
 
@@ -2648,10 +2661,41 @@
                 tiPosition,
                 origTiGua: trigramData[origTiIdx],
                 origYongGua: trigramData[origYongIdx],
+                chgUpperGua: trigramData[changedHex.upperVal],
+                chgLowerGua: trigramData[changedHex.lowerVal],
+                monthStrength: getTiStrength(r.month || "", trigramData[origTiIdx].wuxing),
                 origRel,
                 chgRel,
                 comprehensive
             };
+        }
+
+        function renderCompareQuickSwitcher() {
+            const bar = document.getElementById('compare-quick-switcher');
+            const pillsEl = document.getElementById('compare-switcher-pills');
+            if (!bar || !pillsEl) return;
+
+            if (!currentRestoredRecordId || compareRecordIds.length < 2 || !compareRecordIds.includes(currentRestoredRecordId)) {
+                bar.classList.add('hidden');
+                return;
+            }
+
+            const records = getStoredRecords();
+            const items = compareRecordIds.map(id => records.find(r => r.id === id)).filter(Boolean);
+            if (items.length < 2) {
+                bar.classList.add('hidden');
+                return;
+            }
+
+            pillsEl.innerHTML = items.map((r, idx) => {
+                const isActive = r.id === currentRestoredRecordId;
+                const cls = isActive
+                    ? 'bg-indigo-700 text-white border-indigo-700 shadow-xs'
+                    : 'bg-white text-indigo-900 border-indigo-300 hover:bg-indigo-100';
+                return `<button type="button" onclick="restoreRecord(${r.id})" class="px-2.5 py-1 rounded-full border text-xs font-semibold transition cursor-pointer ${cls}">${isActive ? '✓ ' : ''}${idx + 1}. ${r.title}</button>`;
+            }).join('');
+
+            bar.classList.remove('hidden');
         }
 
         function openCompareModal() {
@@ -2706,11 +2750,21 @@
                                     <div class="bg-rose-500 h-full" style="width:${c.yongPercent}%"></div>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-1.5 text-xs bg-gray-50 p-2 rounded border border-gray-200">
-                                <div><span class="text-gray-500">體卦：</span><span class="font-bold ${wuxingColors[item.origTiGua.wuxing]}">${item.origTiGua.name}(${item.origTiGua.yyWuxing})</span></div>
-                                <div><span class="text-gray-500">用卦：</span><span class="font-bold ${wuxingColors[item.origYongGua.wuxing]}">${item.origYongGua.name}(${item.origYongGua.yyWuxing})</span></div>
+                            <div class="grid grid-cols-2 gap-1.5 text-xs bg-gray-50 p-2.5 rounded border border-gray-200">
+                                <div><span class="text-gray-500">本體：</span><span class="font-bold ${wuxingColors[item.origTiGua.wuxing]}">${item.origTiGua.name}(${item.origTiGua.yyWuxing})</span></div>
+                                <div><span class="text-gray-500">本用：</span><span class="font-bold ${wuxingColors[item.origYongGua.wuxing]}">${item.origYongGua.name}(${item.origYongGua.yyWuxing})</span></div>
                                 <div><span class="text-gray-500">本卦：</span><span class="font-bold text-amber-900">${origRelTag}</span></div>
                                 <div><span class="text-gray-500">變卦：</span><span class="font-bold text-amber-900">${chgRelTag}</span></div>
+                                ${item.hasMovingLines ? `
+                                    <div><span class="text-gray-500">變上：</span><span class="font-bold ${wuxingColors[item.chgUpperGua.wuxing]}">${item.chgUpperGua.name}(${item.chgUpperGua.yyWuxing})</span><span class="text-[10px] text-gray-500 ml-0.5">${item.tiPosition === 'upper' ? '[體]' : '[用]'}</span></div>
+                                    <div><span class="text-gray-500">變下：</span><span class="font-bold ${wuxingColors[item.chgLowerGua.wuxing]}">${item.chgLowerGua.name}(${item.chgLowerGua.yyWuxing})</span><span class="text-[10px] text-gray-500 ml-0.5">${item.tiPosition === 'lower' ? '[體]' : '[用]'}</span></div>
+                                ` : `
+                                    <div class="col-span-2 text-gray-400">變卦上下：純靜卦（無變爻）</div>
+                                `}
+                                <div class="col-span-2 pt-1 mt-0.5 border-t border-gray-200/80 flex items-center justify-between gap-1 flex-wrap">
+                                    <span><span class="text-gray-500">月令：</span><span class="font-extrabold ${wuxingColors[item.r.month] || 'text-gray-600'}">${item.r.month ? item.r.month + '氣司權' : '未指定'}</span></span>
+                                    ${item.monthStrength ? `<span class="text-[11px] font-bold text-amber-900">${item.monthStrength.trim()}</span>` : ''}
+                                </div>
                             </div>
                             <p class="text-[11px] text-gray-600 leading-relaxed bg-amber-50/50 p-2 rounded border border-amber-100">${c.finalAdvise}</p>
                             ${item.r.outcomeNote ? `<div class="text-[11px] text-emerald-900 bg-emerald-50 p-2 rounded border border-emerald-200"><b>📌 實際結果：</b>${item.r.outcomeNote}</div>` : ''}
