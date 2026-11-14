@@ -1662,7 +1662,7 @@
 
                 let monthHtml = "";
                 if (currentMonthWuxing) {
-                     monthHtml = `<div class="mt-1.5 pt-1.5 border-t border-dashed border-gray-200 text-xs text-gray-500 w-full text-center">當令：<span class="${wuxingColors[currentMonthWuxing]} font-bold">${currentMonthWuxing}氣司權</span></div>`;
+                     monthHtml = `<div class="mt-1.5 pt-1.5 border-t border-dashed border-gray-200 text-xs text-gray-500 w-full flex items-center justify-center gap-1.5"><span>當令：</span><span class="inline-block font-extrabold text-sm px-1.5 py-0.5 rounded border shadow-2xs ${wuxingBadgeColors[currentMonthWuxing]}">${currentMonthWuxing}</span><span class="text-gray-300">|</span><span class="${wuxingColors[currentMonthWuxing]} font-bold">${currentMonthWuxing}氣司權</span></div>`;
                 }
 
                 return `
@@ -1709,12 +1709,14 @@
                 const low = trigramData[lowerIdx];
                 const buildSideTag = (g, ty) => {
                     const tyMark = ty === "[體]"
-                        ? `<span class="text-xs sm:text-sm px-2 py-0.5 bg-emerald-700 text-white rounded-md font-extrabold mt-1 shadow-xs">體</span>`
-                        : (ty === "[用]" ? `<span class="text-xs sm:text-sm px-2 py-0.5 bg-rose-700 text-white rounded-md font-extrabold mt-1 shadow-xs">用</span>` : "");
+                        ? `<span class="text-base sm:text-lg leading-none px-2 py-2 bg-emerald-700 text-white rounded-md font-extrabold shadow-xs border border-emerald-900/30 flex items-center justify-center">體</span>`
+                        : (ty === "[用]" ? `<span class="text-base sm:text-lg leading-none px-2 py-2 bg-rose-700 text-white rounded-md font-extrabold shadow-xs border border-rose-900/30 flex items-center justify-center">用</span>` : "");
                     return `
-                        <div class="flex flex-col items-center justify-center shrink-0 w-16 sm:w-20 border-l-2 border-amber-200/80 pl-2 py-1">
-                            <span class="font-extrabold text-xl sm:text-2xl leading-tight px-2.5 py-0.5 rounded-lg border shadow-xs ${wuxingBadgeColors[g.wuxing]}">${g.name}</span>
-                            <span class="text-xs sm:text-sm font-extrabold ${wuxingColors[g.wuxing]} mt-1">${g.yyWuxing}</span>
+                        <div class="flex items-center justify-center gap-1.5 shrink-0 border-l-2 border-amber-200/80 pl-2.5 py-1">
+                            <div class="flex flex-col items-center justify-center gap-1">
+                                <span class="font-extrabold text-base sm:text-lg leading-none px-2 py-1 rounded-md border shadow-2xs ${wuxingBadgeColors[g.wuxing]}">${g.name}</span>
+                                <span class="font-extrabold text-base sm:text-lg leading-none ${wuxingColors[g.wuxing]}">${g.yyWuxing}</span>
+                            </div>
                             ${tyMark}
                         </div>
                     `;
@@ -2266,6 +2268,7 @@
             records.unshift(record);
             setStoredRecords(records);
             pushRecordToCloud(record);
+            currentRestoredRecordId = record.id;
 
             alert(`✅ 儲存成功！${currentUser ? '已同步至您的 Google 雲端：' : '已記錄'}「${title}」`);
             titleInput.value = "";
@@ -2831,12 +2834,16 @@
             };
 
             const buildSide = (g, ty) => {
-                const tyCls = ty === '體' ? 'bg-emerald-700 text-white' : 'bg-rose-700 text-white';
+                const tyCls = ty === '體'
+                    ? 'bg-emerald-700 text-white border-emerald-900/30'
+                    : 'bg-rose-700 text-white border-rose-900/30';
                 return `
-                    <div class="flex flex-col items-center justify-center shrink-0 w-16 border-l-2 border-amber-200/80 pl-1.5 py-0.5">
-                        <span class="font-extrabold text-base leading-tight px-2 py-0.5 rounded border shadow-2xs ${wuxingBadgeColors[g.wuxing]}">${g.name}</span>
-                        <span class="text-[11px] font-extrabold ${wuxingColors[g.wuxing]} mt-0.5">${g.yyWuxing}</span>
-                        <span class="text-[10px] px-1.5 py-0.2 rounded font-extrabold mt-0.5 ${tyCls}">${ty}</span>
+                    <div class="flex items-center justify-center gap-1 shrink-0 border-l-2 border-amber-200/80 pl-2 py-0.5">
+                        <div class="flex flex-col items-center justify-center gap-0.5">
+                            <span class="font-extrabold text-sm leading-none px-1.5 py-1 rounded border shadow-2xs ${wuxingBadgeColors[g.wuxing]}">${g.name}</span>
+                            <span class="font-extrabold text-sm leading-none ${wuxingColors[g.wuxing]}">${g.yyWuxing}</span>
+                        </div>
+                        <span class="font-extrabold text-sm leading-none px-1.5 py-1.5 rounded border shadow-2xs flex items-center justify-center ${tyCls}">${ty}</span>
                     </div>
                 `;
             };
@@ -3110,7 +3117,10 @@
             const matches = [];
             records.forEach(r => {
                 if (!r.lines || r.lines.length !== 6) return;
-                // 排除與目前完全同一筆的數字/時辰起卦（避免自己對照自己）
+                // 排除目前正在查看或剛儲存的同一筆紀錄（避免自己對照自己）
+                if (currentRestoredRecordId && r.id === currentRestoredRecordId) {
+                    return;
+                }
                 if (lastMeihuaParams && r.meihua &&
                     r.meihua.num1 === lastMeihuaParams.num1 &&
                     r.meihua.num2 === lastMeihuaParams.num2 &&
