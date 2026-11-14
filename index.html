@@ -153,6 +153,15 @@
                 <div id="solar-term-hint" class="text-xs text-amber-800/80 font-medium"></div>
             </div>
 
+            <!-- 問事題目（起卦前可先填寫，起卦後也可隨時修改） -->
+            <div class="flex justify-center mb-4 fade-in" id="question-input-bar">
+                <div class="flex items-center gap-2 bg-[#faf7f2] px-4 py-2 rounded-lg border border-amber-900/15 shadow-xs w-full max-w-2xl">
+                    <span class="text-xs md:text-sm font-bold text-amber-900 shrink-0">📝 問事題目：</span>
+                    <input type="text" id="cast-question-input" oninput="syncQuestionTitle('cast')" placeholder="選填（例：11/14 正二能否買到 24.64？、媽媽手術順利嗎？）" class="flex-1 bg-white border border-amber-300 rounded px-2.5 py-1 text-xs md:text-sm outline-none focus:border-amber-700">
+                    <button type="button" onclick="clearQuestionTitle()" id="btn-clear-question" class="hidden text-xs text-gray-400 hover:text-gray-700 font-bold px-1 cursor-pointer" title="清除題目">✕</button>
+                </div>
+            </div>
+
             <!-- 硬幣起卦面板 -->
             <div id="panel-coin" class="flex flex-col md:flex-row justify-between items-center bg-[#f5f0e6] p-4 rounded-lg shadow-inner mb-6 gap-3">
                 <div class="text-center md:text-left">
@@ -202,6 +211,8 @@
                         <span id="storage-status-badge" class="text-xs font-bold px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full border border-green-200">💻 本機儲存（僅此設備）</span>
                     </div>
                     <div class="flex gap-2 flex-wrap">
+                        <button id="btn-compare-records" onclick="openCompareModal()" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded transition shadow font-semibold">⚖️ 雙卦/多卦比較 (0)</button>
+                        <button id="btn-clear-compare" onclick="clearCompareSelection()" class="hidden px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-xs rounded transition border border-indigo-300">清除勾選</button>
                         <button id="btn-sync-now" onclick="syncRecordsFromCloud(false)" class="hidden px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded transition shadow">🔄 立即同步</button>
                         <button id="btn-migrate-local" onclick="migrateLocalRecordsToCloud()" class="hidden px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white text-xs rounded transition shadow">☁️ 上傳本機舊紀錄</button>
                         <button onclick="exportRecordsJson()" class="px-3 py-1 bg-amber-800 hover:bg-amber-900 text-white text-xs rounded transition shadow">📤 匯出備份 (JSON)</button>
@@ -231,6 +242,8 @@
                         <button type="button" onclick="setRecordTopicFilter('all')" data-topic-filter="all" class="record-topic-btn px-2.5 py-1 rounded-full border font-semibold transition bg-amber-700 text-white border-amber-700">全主題</button>
                         <button type="button" onclick="setRecordTopicFilter('invest')" data-topic-filter="invest" class="record-topic-btn px-2.5 py-1 rounded-full border font-semibold transition bg-white text-gray-700 border-gray-300 hover:bg-amber-50">📈 投資理財</button>
                         <button type="button" onclick="setRecordTopicFilter('health')" data-topic-filter="health" class="record-topic-btn px-2.5 py-1 rounded-full border font-semibold transition bg-white text-gray-700 border-gray-300 hover:bg-amber-50">🩺 健康醫療</button>
+                        <span id="custom-topics-list" class="contents"></span>
+                        <button type="button" onclick="addCustomTopic()" class="px-2.5 py-1 rounded-full border border-dashed border-amber-500 text-amber-800 bg-amber-50/70 hover:bg-amber-100 font-semibold transition cursor-pointer">➕ 新增主題</button>
                     </div>
                 </div>
                 <div id="records-list" class="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -322,6 +335,27 @@
                 </div>
             </div>
 
+            <!-- 雙卦 / 多卦並排比較 Modal -->
+            <div id="modal-compare-records" class="hidden fixed inset-0 bg-black/60 z-50 items-center justify-center p-3 md:p-6">
+                <div class="bg-[#fdfbf7] rounded-2xl shadow-2xl max-w-6xl w-full p-4 md:p-6 border border-amber-900/25 fade-in max-h-[92vh] overflow-y-auto">
+                    <div class="flex justify-between items-center pb-3 border-b border-amber-900/15 mb-4">
+                        <div>
+                            <h4 class="font-bold text-amber-950 text-base md:text-lg flex items-center gap-2">
+                                <span>⚖️ 雙卦 / 多卦並排比較（吉凶決策對照）</span>
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-0.5">並排比對各方案的體黨能量、總斷格局、本互變生剋與月令得氣</p>
+                        </div>
+                        <button onclick="closeCompareModal()" class="text-gray-400 hover:text-gray-700 text-2xl font-bold px-2 cursor-pointer">&times;</button>
+                    </div>
+                    <div id="compare-summary-banner" class="mb-4 p-3 rounded-xl border bg-amber-50 border-amber-300 text-xs md:text-sm text-amber-950 font-semibold"></div>
+                    <div id="compare-cards-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    <div class="flex justify-end gap-2 mt-5 pt-3 border-t border-gray-200">
+                        <button onclick="clearCompareSelection(); closeCompareModal();" class="px-4 py-1.5 rounded text-xs text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200">清除勾選並關閉</button>
+                        <button onclick="closeCompareModal()" class="px-5 py-1.5 rounded text-xs font-bold text-white bg-amber-800 hover:bg-amber-900 shadow">關閉</button>
+                    </div>
+                </div>
+            </div>
+
             <!-- 投擲過程 / 狀態提示 -->
             <div class="mb-4 min-h-10 flex items-center justify-center space-x-1 md:space-x-2 text-sm md:text-base font-medium text-amber-900 flex-wrap" id="toss-history">
                 <span class="text-gray-400 text-sm">請選擇上方起卦方式開始...</span>
@@ -339,7 +373,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
                     <div>
                         <label class="block text-xs font-bold text-amber-900 mb-1">檔案/紀錄名稱 (問事主題)</label>
-                        <input type="text" id="record-title" placeholder="例：換工作吉凶、投資決策、合作運勢" class="px-3 py-2 border border-gray-300 rounded w-full text-sm focus:ring-amber-700 outline-none bg-white">
+                        <input type="text" id="record-title" oninput="syncQuestionTitle('save')" placeholder="例：換工作吉凶、投資決策、合作運勢" class="px-3 py-2 border border-gray-300 rounded w-full text-sm focus:ring-amber-700 outline-none bg-white">
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-amber-900 mb-1">📝 情況備註 (選填)</label>
@@ -355,6 +389,15 @@
 
             <!-- 結果呈現區 (本卦、互卦、變卦) -->
             <div id="result-area">
+                <!-- 事後也可隨時修改問事題目列 -->
+                <div id="active-question-banner" class="hidden mb-3 bg-amber-50/90 border border-amber-300 rounded-lg px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-xs">
+                    <div class="flex items-center gap-2 flex-1">
+                        <span class="text-xs md:text-sm font-bold text-amber-900 shrink-0">☯ 問事題目：</span>
+                        <input type="text" id="result-question-input" oninput="syncQuestionTitle('result')" placeholder="尚未輸入題目，可直接在此補寫或修改..." class="flex-1 bg-white border border-amber-300 rounded px-2.5 py-1 text-sm font-bold text-amber-950 outline-none focus:border-amber-700">
+                    </div>
+                    <button type="button" id="btn-update-restored-title" onclick="updateRestoredRecordTitle()" class="hidden px-3 py-1 bg-amber-800 hover:bg-amber-900 text-white text-xs font-semibold rounded shadow-xs transition cursor-pointer shrink-0">💾 更新原紀錄題目</button>
+                </div>
+
                 <div id="result-panel" class="hidden flex flex-nowrap overflow-x-auto gap-4 md:gap-6 w-full pb-6 pt-2 snap-x snap-mandatory">
                     
                     <!-- 本卦 -->
@@ -506,6 +549,7 @@
                         </div>
                         <p id="master-final-advise" class="text-sm md:text-base leading-relaxed tracking-wide font-medium">--</p>
                         <div id="master-month-effect" class="text-xs text-amber-200/90 mt-2.5 pt-2 border-t border-amber-700/80"></div>
+                        <div id="master-timing-advice" class="text-xs text-amber-100 mt-2 pt-2 border-t border-amber-700/60 bg-black/15 rounded-lg p-2.5"></div>
                     </div>
 
                 </div>
@@ -1086,6 +1130,27 @@
                 finalAdvise = "【中平權衡斷語】：體用相爭、勢均力敵。事情成敗繫於人為努力與細節把握，善用互卦中的轉機，沉穩應對方能轉安。";
             }
 
+            // 應期／轉機五行參考提示
+            const genByMap = { "金": "土", "水": "金", "木": "水", "火": "木", "土": "火" };
+            const wuxingTimeDesc = {
+                "木": "木（寅、卯月／春；寅、卯日或 03–07時）",
+                "火": "火（巳、午月／夏；巳、午日或 09–13時）",
+                "土": "土（辰戌丑未四季月；辰戌丑未日或換季時）",
+                "金": "金（申、酉月／秋；申、酉日或 15–19時）",
+                "水": "水（亥、子月／冬；亥、子日或 21–01時）"
+            };
+            const genTiWuxing = genByMap[tiWuxing];
+            let timingAdvice = "";
+            if (bridgeFound) {
+                timingAdvice = `⏳ 應期／轉機參考：關鍵在通關之【${wuxingTimeDesc[bridgeFound.bridge]}】，逢此五行生旺之時最易化煞為生、促成轉機。`;
+            } else if (tiPercent <= 45) {
+                timingAdvice = `⏳ 應期／轉機參考：目前體勢偏弱，宜待生助體卦之【${wuxingTimeDesc[genTiWuxing]}】或比和助身之【${wuxingTimeDesc[tiWuxing]}】，事情較易出現轉機或好轉。`;
+            } else if (tiPercent >= 65) {
+                timingAdvice = `⏳ 應期／發動參考：體勢充盈，可把握【${wuxingTimeDesc[tiWuxing]}】或印星生扶之【${wuxingTimeDesc[genTiWuxing]}】順勢推進，最易見效應驗。`;
+            } else {
+                timingAdvice = `⏳ 應期／觀察參考：雙方勢均力敵，遇【${wuxingTimeDesc[genTiWuxing]}】或【${wuxingTimeDesc[tiWuxing]}】氣旺之時，局勢方向會更明朗。`;
+            }
+
             return {
                 isStatic,
                 patternTitle,
@@ -1100,13 +1165,59 @@
                 greedFound,
                 bridgeStatusHtml,
                 monthEffect,
+                timingAdvice,
                 stage1, stage2, stage3,
                 finalAdvise
             };
         }
 
+        let currentRestoredRecordId = null;
+
+        function syncQuestionTitle(source) {
+            const castEl = document.getElementById('cast-question-input');
+            const resEl = document.getElementById('result-question-input');
+            const saveEl = document.getElementById('record-title');
+            const clearBtn = document.getElementById('btn-clear-question');
+
+            let val = "";
+            if (source === 'cast' && castEl) val = castEl.value;
+            else if (source === 'result' && resEl) val = resEl.value;
+            else if (source === 'save' && saveEl) val = saveEl.value;
+
+            if (source !== 'cast' && castEl) castEl.value = val;
+            if (source !== 'result' && resEl) resEl.value = val;
+            if (source !== 'save' && saveEl) saveEl.value = val;
+            if (clearBtn) clearBtn.classList.toggle('hidden', !val.trim());
+        }
+
+        function clearQuestionTitle() {
+            const castEl = document.getElementById('cast-question-input');
+            if (castEl) castEl.value = "";
+            syncQuestionTitle('cast');
+        }
+
+        function updateRestoredRecordTitle() {
+            if (!currentRestoredRecordId) return;
+            const resEl = document.getElementById('result-question-input');
+            const newTitle = (resEl ? resEl.value : '').trim();
+            if (!newTitle) {
+                alert("⚠️ 問事題目不可為空！");
+                return;
+            }
+            const records = getStoredRecords();
+            const record = records.find(r => r.id === currentRestoredRecordId);
+            if (!record) return;
+            record.title = newTitle;
+            setStoredRecords(records);
+            pushRecordToCloud(record);
+            alert(`✅ 已更新原紀錄題目為：「${newTitle}」`);
+        }
+
         function switchTab(mode) {
             const tabs = ['coin', 'number', 'records'];
+            const qBar = document.getElementById('question-input-bar');
+            if (qBar) qBar.classList.toggle('hidden', mode === 'records');
+
             tabs.forEach(t => {
                 const tabBtn = document.getElementById(`tab-${t}`);
                 const panel = document.getElementById(`panel-${t}`);
@@ -1117,7 +1228,9 @@
                     panel.classList.add('flex');
                     if (t === 'records') {
                         document.getElementById('result-panel').classList.add('hidden');
+                        const qb = document.getElementById('active-question-banner'); if (qb) qb.classList.add('hidden');
                         const mp = document.getElementById('master-analysis-panel'); if (mp) mp.classList.add('hidden');
+                        const sim = document.getElementById('similar-records-panel'); if (sim) sim.classList.add('hidden');
                         const sp = document.getElementById('wuxing-summary-panel'); if (sp) sp.classList.add('hidden');
                         document.getElementById('save-action-panel').classList.add('hidden');
                         document.getElementById('save-action-panel').classList.remove('flex');
@@ -1137,7 +1250,7 @@
 
         function tossSingleCoin() {
             if (castLines.length >= 6) return;
-            if (castLines.length === 0) lastMeihuaParams = null;
+            if (castLines.length === 0) { lastMeihuaParams = null; currentRestoredRecordId = null; }
             castLines.push(generateOneYao());
             currentMethodInfo = "六爻硬幣起卦";
             updateHistoryUI();
@@ -1147,6 +1260,7 @@
         function autoTossAll() {
             castLines = [];
             lastMeihuaParams = null;
+            currentRestoredRecordId = null;
             for (let i = 0; i < 6; i++) castLines.push(generateOneYao());
             currentMethodInfo = "六爻硬幣自動成卦";
             updateHistoryUI();
@@ -1161,6 +1275,7 @@
             const timeText = timeSelectEl.options[timeSelectEl.selectedIndex]?.text || `${timeVal}時`;
 
             if(!num1 || !num2) { alert("請輸入完整的上卦與下卦數字！"); return; }
+            currentRestoredRecordId = null;
 
             const upperGuaNum = num1 % 8 === 0 ? 8 : num1 % 8;
             const lowerGuaNum = num2 % 8 === 0 ? 8 : num2 % 8;
@@ -1199,7 +1314,12 @@
         function resetDivination() {
             castLines = [];
             lastMeihuaParams = null;
+            currentRestoredRecordId = null;
             document.getElementById('result-panel').classList.add('hidden');
+            const activeQBanner = document.getElementById('active-question-banner');
+            if (activeQBanner) activeQBanner.classList.add('hidden');
+            const similarPanel = document.getElementById('similar-records-panel');
+            if (similarPanel) similarPanel.classList.add('hidden');
             const summaryPanel = document.getElementById('wuxing-summary-panel');
             if (summaryPanel) summaryPanel.classList.add('hidden');
             const masterPanel = document.getElementById('master-analysis-panel');
@@ -1511,17 +1631,54 @@
             renderTiYongUI('mutual-ti-yong-relation', mutualTiWuxing, mutualYongWuxing);
             document.getElementById('mutual-desc').innerText = hexagramDesc[mutualName] || "查無卦辭。";
 
+            const renderHexagramLinesWithTrigrams = (containerEl, binaryArray, upperIdx, lowerIdx, upTY, lowTY, movingLineArray = null) => {
+                if (!containerEl) return;
+                const up = trigramData[upperIdx];
+                const low = trigramData[lowerIdx];
+                const buildSideTag = (g, ty) => {
+                    const tyMark = ty === "[體]"
+                        ? `<span class="text-[10px] px-1 py-0.2 bg-emerald-700 text-white rounded font-bold mt-0.5">體</span>`
+                        : (ty === "[用]" ? `<span class="text-[10px] px-1 py-0.2 bg-rose-700 text-white rounded font-bold mt-0.5">用</span>` : "");
+                    return `
+                        <div class="flex flex-col items-center justify-center shrink-0 w-12 sm:w-14 border-l-2 border-amber-200/80 pl-1.5 py-0.5">
+                            <span class="font-extrabold text-sm sm:text-base px-1.5 py-0.5 rounded border shadow-2xs ${wuxingBadgeColors[g.wuxing]}">${g.name}</span>
+                            <span class="text-[10px] font-bold ${wuxingColors[g.wuxing]} mt-0.5">${g.yyWuxing}</span>
+                            ${tyMark}
+                        </div>
+                    `;
+                };
+
+                let lowerLinesHtml = '';
+                for (let i = 0; i < 3; i++) {
+                    const isMoving = movingLineArray ? (movingLineArray[i] === 6 || movingLineArray[i] === 9) : false;
+                    lowerLinesHtml += createYaoHTML(binaryArray[i] === 1, isMoving, isMoving ? "🔴" : "", i);
+                }
+                let upperLinesHtml = '';
+                for (let i = 3; i < 6; i++) {
+                    const isMoving = movingLineArray ? (movingLineArray[i] === 6 || movingLineArray[i] === 9) : false;
+                    upperLinesHtml += createYaoHTML(binaryArray[i] === 1, isMoving, isMoving ? "🔴" : "", i);
+                }
+
+                containerEl.innerHTML = `
+                    <div class="flex items-center w-full gap-1.5">
+                        <div class="flex flex-col-reverse gap-1 flex-1">${lowerLinesHtml}</div>
+                        ${buildSideTag(low, lowTY)}
+                    </div>
+                    <div class="w-full border-t border-dashed border-amber-200/80 my-1"></div>
+                    <div class="flex items-center w-full gap-1.5">
+                        <div class="flex flex-col-reverse gap-1 flex-1">${upperLinesHtml}</div>
+                        ${buildSideTag(up, upTY)}
+                    </div>
+                `;
+            };
+
             const changedContainer = document.getElementById('changed-lines');
             if (hasMovingLines) {
                 document.getElementById('changed-hex-name').innerText = changedHex.name;
                 document.getElementById('changed-wuxing').innerHTML = getWuXingHtml(changedHex.upperVal, changedHex.lowerVal, changedUpperTiYong, changedLowerTiYong);
                 renderTiYongUI('changed-ti-yong-relation', changedTiWuxing, changedYongWuxing);
                 document.getElementById('changed-desc').innerText = hexagramDesc[changedHex.name] || "查無卦辭。";
-                
-                changedContainer.innerHTML = '';
-                for (let i = 0; i < 6; i++) {
-                    changedContainer.innerHTML += createYaoHTML(changedHex.binaryArray[i] === 1, false, "", i);
-                }
+                renderHexagramLinesWithTrigrams(changedContainer, changedHex.binaryArray, changedHex.upperVal, changedHex.lowerVal, changedUpperTiYong, changedLowerTiYong);
             } else {
                 document.getElementById('changed-hex-name').innerText = "靜卦 (無變)";
                 document.getElementById('changed-wuxing').innerHTML = `<div class="text-xs text-gray-400 mt-2 p-2 text-center bg-gray-50 rounded border border-gray-200 w-full">六爻皆靜，專看本卦卦辭與彖象。</div>`;
@@ -1532,17 +1689,24 @@
 
             const origContainer = document.getElementById('orig-lines');
             const mutualContainer = document.getElementById('mutual-lines');
-            origContainer.innerHTML = '';
-            mutualContainer.innerHTML = '';
-
-            for (let i = 0; i < 6; i++) {
-                const val = castLines[i];
-                const isMoving = (val === 6 || val === 9);
-                origContainer.innerHTML += createYaoHTML(origHex.binaryArray[i] === 1, isMoving, isMoving ? "🔴" : "", i);
-                mutualContainer.innerHTML += createYaoHTML(mutualBin[i] === 1, false, "", i);
-            }
+            renderHexagramLinesWithTrigrams(origContainer, origHex.binaryArray, origHex.upperVal, origHex.lowerVal, upperTiYong, lowerTiYong, castLines);
+            renderHexagramLinesWithTrigrams(mutualContainer, mutualBin, mutualUpper, mutualLower, mutualUpperTiYong, mutualLowerTiYong);
 
             document.getElementById('result-panel').classList.remove('hidden');
+            const activeQBanner = document.getElementById('active-question-banner');
+            if (activeQBanner) {
+                activeQBanner.classList.remove('hidden');
+                const castQ = document.getElementById('cast-question-input');
+                const resQ = document.getElementById('result-question-input');
+                const saveQ = document.getElementById('record-title');
+                const currentQ = (castQ && castQ.value) || (resQ && resQ.value) || (saveQ && saveQ.value) || "";
+                if (resQ) resQ.value = currentQ;
+                if (saveQ) saveQ.value = currentQ;
+                const updateRestoredBtn = document.getElementById('btn-update-restored-title');
+                if (updateRestoredBtn) {
+                    updateRestoredBtn.classList.toggle('hidden', !currentRestoredRecordId);
+                }
+            }
             document.getElementById('save-action-panel').classList.remove('hidden');
             document.getElementById('save-action-panel').classList.add('flex');
 
@@ -1601,6 +1765,8 @@
 
                 document.getElementById('master-final-advise').innerText = comprehensive.finalAdvise;
                 document.getElementById('master-month-effect').innerText = comprehensive.monthEffect;
+                const timingEl = document.getElementById('master-timing-advice');
+                if (timingEl) timingEl.innerText = comprehensive.timingAdvice || "";
 
                 const bridgeBox = document.getElementById('master-bridge-box');
                 if (bridgeBox) bridgeBox.innerHTML = comprehensive.bridgeStatusHtml;
@@ -2103,10 +2269,81 @@
             loadRecordsList();
         }
 
+        const CUSTOM_TOPICS_KEY = "yijing_custom_topics_v1";
+
+        function getCustomTopics() {
+            try {
+                const raw = localStorage.getItem(CUSTOM_TOPICS_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveCustomTopics(topics) {
+            localStorage.setItem(CUSTOM_TOPICS_KEY, JSON.stringify(topics));
+        }
+
+        function renderCustomTopicPills() {
+            const container = document.getElementById('custom-topics-list');
+            if (!container) return;
+            const topics = getCustomTopics();
+            container.innerHTML = topics.map(t => {
+                const filterKey = `custom:${t.name}`;
+                const active = currentRecordTopicFilter === filterKey;
+                const cls = active
+                    ? 'bg-amber-700 text-white border-amber-700'
+                    : 'bg-white text-gray-700 border-gray-300 hover:bg-amber-50';
+                const safeName = t.name.replace(/'/g, "\\'");
+                return `
+                    <span class="inline-flex items-center rounded-full border overflow-hidden ${cls}">
+                        <button type="button" onclick="setRecordTopicFilter('custom:${safeName}')" data-topic-filter="custom:${safeName}" class="record-topic-btn pl-2.5 pr-1.5 py-1 font-semibold transition cursor-pointer">🏷️ ${t.name}</button>
+                        <button type="button" onclick="deleteCustomTopic('${safeName}', event)" class="pr-2 pl-0.5 py-1 text-[10px] opacity-70 hover:opacity-100 font-bold cursor-pointer" title="刪除此主題">✕</button>
+                    </span>
+                `;
+            }).join('');
+        }
+
+        function addCustomTopic() {
+            const name = prompt("請輸入要新增的主題名稱（例：家庭、工作、BTC、正二、媽媽）：");
+            if (!name || !name.trim()) return;
+            const cleanName = name.trim();
+            const topics = getCustomTopics();
+            if (topics.some(t => t.name === cleanName)) {
+                alert("⚠️ 這個主題已經存在囉！");
+                return;
+            }
+            const kwInput = prompt(`請輸入「${cleanName}」的篩選關鍵字（多個字詞可用空白或逗號隔開；若直接按確定，預設就用「${cleanName}」本身搜尋）：`, cleanName);
+            const keywords = (kwInput && kwInput.trim())
+                ? kwInput.trim().split(/[\s,，、]+/).filter(Boolean)
+                : [cleanName];
+            topics.push({ name: cleanName, keywords: keywords });
+            saveCustomTopics(topics);
+            renderCustomTopicPills();
+            setRecordTopicFilter(`custom:${cleanName}`);
+        }
+
+        function deleteCustomTopic(name, event) {
+            if (event) event.stopPropagation();
+            if (!confirm(`確定要移除「${name}」主題按鈕嗎？（不會刪除任何卦象紀錄）`)) return;
+            const topics = getCustomTopics().filter(t => t.name !== name);
+            saveCustomTopics(topics);
+            if (currentRecordTopicFilter === `custom:${name}`) {
+                currentRecordTopicFilter = 'all';
+            }
+            renderCustomTopicPills();
+            setRecordTopicFilter(currentRecordTopicFilter);
+        }
+
         function setRecordTopicFilter(topic) {
             currentRecordTopicFilter = topic;
+            renderCustomTopicPills();
             document.querySelectorAll('.record-topic-btn').forEach(btn => {
                 const active = btn.getAttribute('data-topic-filter') === topic;
+                if (btn.parentElement && btn.parentElement.tagName === 'SPAN') {
+                    return; // custom pills handled by renderCustomTopicPills
+                }
                 btn.classList.toggle('bg-amber-700', active);
                 btn.classList.toggle('text-white', active);
                 btn.classList.toggle('border-amber-700', active);
@@ -2145,10 +2382,18 @@
             if (topic === 'health') {
                 return /(醫|手術|眼|左眼|右眼|視力|拇指|骨科|中醫|胃痛|急診|停藥|健檢|病變|葡萄糖|痊癒|看診|治療)/i.test(text);
             }
+            if (topic && topic.startsWith('custom:')) {
+                const name = topic.slice(7);
+                const found = getCustomTopics().find(t => t.name === name);
+                const kws = (found && found.keywords && found.keywords.length > 0) ? found.keywords : [name];
+                const lower = text.toLowerCase();
+                return kws.some(k => lower.includes(k.toLowerCase()));
+            }
             return true;
         }
 
         function loadRecordsList() {
+            renderCustomTopicPills();
             const container = document.getElementById('records-list');
             if (!container) return;
             const records = getStoredRecords();
@@ -2278,8 +2523,13 @@
                     </div>
                 `;
 
+                const isCompared = compareRecordIds.includes(r.id);
+                const compareBtnCls = isCompared
+                    ? "bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700"
+                    : "bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100";
+
                 return `
-                <div class="flex flex-col bg-white p-4 md:p-5 rounded-lg border border-gray-200 shadow-sm gap-2 hover:border-amber-400 transition">
+                <div class="flex flex-col bg-white p-4 md:p-5 rounded-lg border ${isCompared ? 'border-indigo-400 ring-1 ring-indigo-300' : 'border-gray-200'} shadow-sm gap-2 hover:border-amber-400 transition">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 pb-2 border-b border-gray-100">
                         <div class="flex items-center flex-wrap gap-2">
                             <button onclick="restoreRecord(${r.id})" class="font-bold text-amber-900 hover:text-[#8b2626] text-base text-left hover:underline flex items-center gap-1.5 cursor-pointer transition group" title="點擊直接進入此卦排盤">
@@ -2297,6 +2547,9 @@
                             </span>
                         </div>
                         <div class="flex gap-2 shrink-0 self-end md:self-center flex-wrap">
+                            <button onclick="toggleCompareRecord(${r.id})" class="px-2.5 py-1 border rounded text-xs transition shadow-sm font-semibold cursor-pointer ${compareBtnCls}">
+                                ${isCompared ? '✓ 已選比較' : '⚖️ 加入比較'}
+                            </button>
                             <button onclick="openEditModal(${r.id})" class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded text-xs transition shadow-sm font-semibold flex items-center gap-1">
                                 ✏️ 編輯/備註
                             </button>
@@ -2314,6 +2567,171 @@
                     <div class="text-[11px] text-gray-400 mt-1">建立時間：${dateStr}</div>
                 </div>`;
             }).join('');
+            updateCompareButtonUI();
+        }
+
+        let compareRecordIds = [];
+
+        function updateCompareButtonUI() {
+            const btn = document.getElementById('btn-compare-records');
+            const clrBtn = document.getElementById('btn-clear-compare');
+            if (btn) {
+                btn.textContent = `⚖️ 雙卦/多卦比較 (${compareRecordIds.length})`;
+            }
+            if (clrBtn) {
+                clrBtn.classList.toggle('hidden', compareRecordIds.length === 0);
+            }
+        }
+
+        function toggleCompareRecord(id) {
+            const idx = compareRecordIds.indexOf(id);
+            if (idx >= 0) {
+                compareRecordIds.splice(idx, 1);
+            } else {
+                if (compareRecordIds.length >= 4) {
+                    alert("⚠️ 一次最多可並排比較 4 筆卦象紀錄！");
+                    return;
+                }
+                compareRecordIds.push(id);
+            }
+            updateCompareButtonUI();
+            loadRecordsList();
+        }
+
+        function clearCompareSelection() {
+            compareRecordIds = [];
+            updateCompareButtonUI();
+            loadRecordsList();
+        }
+
+        function evaluateRecordForCompare(r) {
+            const origHex = calculateHexagram(r.lines, "orig");
+            const changedHex = calculateHexagram(r.lines, "changed");
+            const origBin = origHex.binaryArray;
+            const mutualBin = [origBin[1], origBin[2], origBin[3], origBin[2], origBin[3], origBin[4]];
+            const mutualLower = mutualBin[0] + (mutualBin[1] * 2) + (mutualBin[2] * 4);
+            const mutualUpper = mutualBin[3] + (mutualBin[4] * 2) + (mutualBin[5] * 4);
+            const mutualName = hexagramMatrix[mutualUpper][mutualLower];
+            const mutualHex = { name: mutualName, upperVal: mutualUpper, lowerVal: mutualLower, binaryArray: mutualBin };
+
+            const movingIndices = r.lines.map((val, i) => (val === 6 || val === 9) ? i : -1).filter(i => i !== -1);
+            const hasMovingLines = movingIndices.length > 0;
+            let tiPosition = "lower";
+            if (movingIndices.length === 1 && movingIndices[0] < 3) tiPosition = "upper";
+
+            const origTiIdx = tiPosition === "upper" ? origHex.upperVal : origHex.lowerVal;
+            const origYongIdx = tiPosition === "upper" ? origHex.lowerVal : origHex.upperVal;
+            const chgTiIdx = tiPosition === "upper" ? changedHex.upperVal : changedHex.lowerVal;
+            const chgYongIdx = tiPosition === "upper" ? changedHex.lowerVal : changedHex.upperVal;
+
+            const origRel = getTiYongRelation(trigramData[origTiIdx].wuxing, trigramData[origYongIdx].wuxing);
+            const chgRel = hasMovingLines ? getTiYongRelation(trigramData[chgTiIdx].wuxing, trigramData[chgYongIdx].wuxing) : null;
+
+            const comprehensive = evaluateComprehensiveDivination({
+                origHex, mutualHex, changedHex,
+                hasMovingLines, tiPosition,
+                origUpperWuxing: trigramData[origHex.upperVal].wuxing,
+                origLowerWuxing: trigramData[origHex.lowerVal].wuxing,
+                mutualUpperWuxing: trigramData[mutualUpper].wuxing,
+                mutualLowerWuxing: trigramData[mutualLower].wuxing,
+                changedUpperWuxing: trigramData[changedHex.upperVal].wuxing,
+                changedLowerWuxing: trigramData[changedHex.lowerVal].wuxing,
+                monthWuxing: r.month || ""
+            });
+
+            return {
+                r,
+                origHex,
+                mutualHex,
+                changedHex,
+                hasMovingLines,
+                tiPosition,
+                origTiGua: trigramData[origTiIdx],
+                origYongGua: trigramData[origYongIdx],
+                origRel,
+                chgRel,
+                comprehensive
+            };
+        }
+
+        function openCompareModal() {
+            const records = getStoredRecords();
+            const selected = compareRecordIds.map(id => records.find(r => r.id === id)).filter(Boolean);
+            if (selected.length < 2) {
+                alert("⚖️ 請先在下方紀錄列表中點擊「⚖️ 加入比較」，至少選擇 2 筆卦象（最多 4 筆）即可開始並排比較！");
+                return;
+            }
+
+            const analyzed = selected.map(evaluateRecordForCompare);
+            const sortedByTi = [...analyzed].sort((a, b) => b.comprehensive.tiPercent - a.comprehensive.tiPercent);
+            const best = sortedByTi[0];
+            const second = sortedByTi[1];
+            const diff = best.comprehensive.tiPercent - second.comprehensive.tiPercent;
+
+            const summaryEl = document.getElementById('compare-summary-banner');
+            if (summaryEl) {
+                if (diff === 0) {
+                    summaryEl.innerHTML = `⚖️ 綜合比較：目前這 ${analyzed.length} 卦的體黨能量相當（最高皆為 <b>${best.comprehensive.tiPercent}%</b>），建議再細看各方案的變卦生剋與情況備註做決定。`;
+                } else {
+                    summaryEl.innerHTML = `🏆 系統綜合較佳方案：<span class="text-[#8b2626] font-extrabold">「${best.r.title}」</span>（體黨能量 <b>${best.comprehensive.tiPercent}%</b>，領先第二名 ${diff}%，格局為 ${best.comprehensive.patternTitle}）`;
+                }
+            }
+
+            const gridEl = document.getElementById('compare-cards-grid');
+            if (gridEl) {
+                gridEl.innerHTML = analyzed.map(item => {
+                    const isBest = item.r.id === best.r.id && diff > 0;
+                    const c = item.comprehensive;
+                    const chgText = item.hasMovingLines ? item.changedHex.name : "靜卦";
+                    const origRelTag = item.origRel ? item.origRel.text.split(" ")[0] : "—";
+                    const chgRelTag = item.chgRel ? item.chgRel.text.split(" ")[0] : "無變卦";
+                    return `
+                        <div class="bg-white rounded-xl p-4 border-2 ${isBest ? 'border-emerald-500 shadow-md' : 'border-amber-900/15 shadow-xs'} flex flex-col gap-2.5">
+                            <div class="flex items-start justify-between gap-2 border-b border-gray-100 pb-2">
+                                <div>
+                                    ${isBest ? '<span class="inline-block text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full mb-1">🏆 體勢較優</span>' : ''}
+                                    <h5 class="font-bold text-amber-950 text-sm md:text-base leading-snug">☯ ${item.r.title}</h5>
+                                    <div class="text-[11px] text-gray-500 mt-0.5">${item.origHex.name} 之 ${chgText} · ${item.r.month ? item.r.month + '令' : '未指定月令'}</div>
+                                </div>
+                                <button onclick="closeCompareModal(); restoreRecord(${item.r.id});" class="text-[11px] px-2 py-1 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 rounded shrink-0 cursor-pointer">詳盤 ↗</button>
+                            </div>
+                            <div class="text-xs font-bold px-2.5 py-1 rounded border text-center ${c.patternClass}">${c.patternTitle}</div>
+                            <div>
+                                <div class="flex justify-between text-xs font-bold mb-1">
+                                    <span class="text-emerald-700">🟢 體黨 ${c.tiPercent}%</span>
+                                    <span class="text-rose-700">用黨 ${c.yongPercent}% 🔴</span>
+                                </div>
+                                <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden flex">
+                                    <div class="bg-emerald-600 h-full" style="width:${c.tiPercent}%"></div>
+                                    <div class="bg-rose-500 h-full" style="width:${c.yongPercent}%"></div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1.5 text-xs bg-gray-50 p-2 rounded border border-gray-200">
+                                <div><span class="text-gray-500">體卦：</span><span class="font-bold ${wuxingColors[item.origTiGua.wuxing]}">${item.origTiGua.name}(${item.origTiGua.yyWuxing})</span></div>
+                                <div><span class="text-gray-500">用卦：</span><span class="font-bold ${wuxingColors[item.origYongGua.wuxing]}">${item.origYongGua.name}(${item.origYongGua.yyWuxing})</span></div>
+                                <div><span class="text-gray-500">本卦：</span><span class="font-bold text-amber-900">${origRelTag}</span></div>
+                                <div><span class="text-gray-500">變卦：</span><span class="font-bold text-amber-900">${chgRelTag}</span></div>
+                            </div>
+                            <p class="text-[11px] text-gray-600 leading-relaxed bg-amber-50/50 p-2 rounded border border-amber-100">${c.finalAdvise}</p>
+                            ${item.r.outcomeNote ? `<div class="text-[11px] text-emerald-900 bg-emerald-50 p-2 rounded border border-emerald-200"><b>📌 實際結果：</b>${item.r.outcomeNote}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const modal = document.getElementById('modal-compare-records');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeCompareModal() {
+            const modal = document.getElementById('modal-compare-records');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
         }
 
         function restoreRecord(id) {
@@ -2322,6 +2740,12 @@
             if (!record) return;
 
             castLines = [...record.lines];
+            currentRestoredRecordId = record.id;
+            const castQInput = document.getElementById('cast-question-input');
+            if (castQInput) {
+                castQInput.value = record.title || "";
+                syncQuestionTitle('cast');
+            }
             currentMethodInfo = record.method || "載入紀錄";
             lastMeihuaParams = record.meihua ? { ...record.meihua } : null;
 
