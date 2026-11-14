@@ -135,8 +135,8 @@
             </div>
 
             <!-- 月令選擇器 -->
-            <div class="flex justify-center mb-6 fade-in" id="month-selector-container">
-                <div class="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-full border border-amber-900/20 shadow-sm">
+            <div class="flex flex-col items-center mb-6 fade-in gap-1.5" id="month-selector-container">
+                <div class="flex items-center gap-2 bg-amber-50 px-4 py-2 rounded-full border border-amber-900/20 shadow-sm flex-wrap justify-center">
                     <span class="text-sm font-bold text-amber-900">🗓️ 占卜月令 (五行)：</span>
                     <select id="global-month" onchange="onMonthChange()" class="bg-white border border-amber-300 text-amber-900 rounded px-2 py-1 text-sm outline-none focus:ring focus:ring-amber-200 cursor-pointer">
                         <option value="">-- 未指定 --</option>
@@ -146,7 +146,9 @@
                         <option value="水">冬 (亥、子月) - 水旺</option>
                         <option value="土">四季 (辰戌丑未月) - 土旺</option>
                     </select>
+                    <button type="button" onclick="applyAutoSolarTermMonth(true)" id="btn-auto-month" class="text-[11px] px-2 py-1 rounded-full bg-amber-200/70 hover:bg-amber-300/80 text-amber-950 font-semibold transition cursor-pointer" title="恢復依今日節氣自動帶入">🔄 節氣自動</button>
                 </div>
+                <div id="solar-term-hint" class="text-xs text-amber-800/80 font-medium"></div>
             </div>
 
             <!-- 硬幣起卦面板 -->
@@ -204,6 +206,28 @@
                             📥 匯入檔案 <input type="file" accept=".json" onchange="importRecordsFile(event)" class="hidden">
                         </label>
                         <button onclick="clearAllRecords()" class="px-3 py-1 bg-red-100 hover:bg-red-200 text-red-700 text-xs rounded transition border border-red-300">清空全部</button>
+                    </div>
+                </div>
+                <!-- 紀錄搜尋、狀態篩選與覆盤統計列 -->
+                <div class="mb-3 space-y-2 bg-white/80 p-3 rounded-lg border border-amber-900/15">
+                    <div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                        <div class="relative flex-1">
+                            <input type="text" id="records-search-input" oninput="loadRecordsList()" placeholder="🔍 搜尋問事題目、備註、實際結果或卦名..." class="w-full pl-3 pr-8 py-1.5 border border-amber-300 rounded-md text-xs md:text-sm outline-none focus:border-amber-700 bg-white">
+                            <button type="button" id="btn-clear-search" onclick="clearRecordsSearch()" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-xs font-bold px-1">✕</button>
+                        </div>
+                        <div id="records-filter-summary" class="text-[11px] md:text-xs text-amber-900 font-semibold whitespace-nowrap bg-amber-50 px-2.5 py-1.5 rounded border border-amber-200 text-center"></div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span class="text-gray-500 font-bold mr-0.5">狀態：</span>
+                        <button type="button" onclick="setRecordStatusFilter('all')" data-status-filter="all" class="record-filter-btn px-2.5 py-1 rounded-full border font-semibold transition bg-amber-800 text-white border-amber-800">全部</button>
+                        <button type="button" onclick="setRecordStatusFilter('pending')" data-status-filter="pending" class="record-filter-btn px-2.5 py-1 rounded-full border font-semibold transition bg-white text-gray-700 border-gray-300 hover:bg-amber-50">⏳ 觀察中</button>
+                        <button type="button" onclick="setRecordStatusFilter('accurate')" data-status-filter="accurate" class="record-filter-btn px-2.5 py-1 rounded-full border font-semibold transition bg-white text-emerald-700 border-emerald-300 hover:bg-emerald-50">✅ 應驗準確</button>
+                        <button type="button" onclick="setRecordStatusFilter('inaccurate')" data-status-filter="inaccurate" class="record-filter-btn px-2.5 py-1 rounded-full border font-semibold transition bg-white text-rose-700 border-rose-300 hover:bg-rose-50">❌ 未應驗</button>
+                        <span class="text-gray-300 mx-1 hidden sm:inline">|</span>
+                        <span class="text-gray-500 font-bold mr-0.5">主題：</span>
+                        <button type="button" onclick="setRecordTopicFilter('all')" data-topic-filter="all" class="record-topic-btn px-2.5 py-1 rounded-full border font-semibold transition bg-amber-700 text-white border-amber-700">全主題</button>
+                        <button type="button" onclick="setRecordTopicFilter('invest')" data-topic-filter="invest" class="record-topic-btn px-2.5 py-1 rounded-full border font-semibold transition bg-white text-gray-700 border-gray-300 hover:bg-amber-50">📈 投資理財</button>
+                        <button type="button" onclick="setRecordTopicFilter('health')" data-topic-filter="health" class="record-topic-btn px-2.5 py-1 rounded-full border font-semibold transition bg-white text-gray-700 border-gray-300 hover:bg-amber-50">🩺 健康醫療</button>
                     </div>
                 </div>
                 <div id="records-list" class="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -270,8 +294,22 @@
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 mb-1">📝 情況備註 (問事背景、當下緣由、驗證反饋)</label>
-                            <textarea id="edit-record-notes" rows="3" placeholder="記錄當時問事背景情況、選擇這些條件的緣由，或後續應驗發展..." class="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-amber-700 resize-none"></textarea>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">📝 情況備註 (問事背景、當下緣由)</label>
+                            <textarea id="edit-record-notes" rows="2" placeholder="記錄當時問事背景情況、選擇這些條件的緣由..." class="w-full px-3 py-2 border border-gray-300 rounded text-sm outline-none focus:border-amber-700 resize-none"></textarea>
+                        </div>
+                        <div class="p-3 bg-emerald-50/60 rounded-lg border border-emerald-200 space-y-2.5">
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-950 mb-1">🎯 事後應驗狀態</label>
+                                <select id="edit-outcome-status" class="w-full px-3 py-1.5 border border-emerald-300 rounded text-sm bg-white outline-none focus:border-emerald-700 font-semibold">
+                                    <option value="pending">⏳ 觀察中</option>
+                                    <option value="accurate">✅ 應驗準確</option>
+                                    <option value="inaccurate">❌ 未應驗</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-emerald-950 mb-1">📌 實際結果備註 (一句話覆盤驗證)</label>
+                                <input type="text" id="edit-outcome-note" placeholder="例：11/12 順利買到、手術順利康復、後續漲跌結果..." class="w-full px-3 py-1.5 border border-emerald-300 rounded text-sm bg-white outline-none focus:border-emerald-700">
+                            </div>
                         </div>
                     </div>
                     <div class="flex justify-end gap-2 mt-5 pt-3 border-t border-gray-200">
@@ -1204,7 +1242,67 @@
             `;
         }
 
+        function getSolarTermMonthInfo(date = new Date()) {
+            const year = date.getFullYear();
+            const y = year % 100;
+            const leap = Math.floor(y / 4);
+            const termDay = (c) => Math.floor(y * 0.2422 + c) - leap;
+
+            const terms = [
+                { month: 1,  day: termDay(5.4055), term: "小寒", branch: "丑月", wuxing: "土" },
+                { month: 2,  day: termDay(3.87),   term: "立春", branch: "寅月", wuxing: "木" },
+                { month: 3,  day: termDay(5.63),   term: "驚蟄", branch: "卯月", wuxing: "木" },
+                { month: 4,  day: termDay(4.81),   term: "清明", branch: "辰月", wuxing: "土" },
+                { month: 5,  day: termDay(5.52),   term: "立夏", branch: "巳月", wuxing: "火" },
+                { month: 6,  day: termDay(5.678),  term: "芒種", branch: "午月", wuxing: "火" },
+                { month: 7,  day: termDay(7.108),  term: "小暑", branch: "未月", wuxing: "土" },
+                { month: 8,  day: termDay(7.5),    term: "立秋", branch: "申月", wuxing: "金" },
+                { month: 9,  day: termDay(7.646),  term: "白露", branch: "酉月", wuxing: "金" },
+                { month: 10, day: termDay(8.318),  term: "寒露", branch: "戌月", wuxing: "土" },
+                { month: 11, day: termDay(7.438),  term: "立冬", branch: "亥月", wuxing: "水" },
+                { month: 12, day: termDay(7.18),   term: "大雪", branch: "子月", wuxing: "水" }
+            ];
+
+            const m = date.getMonth() + 1;
+            const d = date.getDate();
+            let current = terms[terms.length - 1];
+            for (let i = terms.length - 1; i >= 0; i--) {
+                if (m > terms[i].month || (m === terms[i].month && d >= terms[i].day)) {
+                    current = terms[i];
+                    break;
+                }
+            }
+            return current;
+        }
+
+        function applyAutoSolarTermMonth(shouldRerender = true) {
+            const info = getSolarTermMonthInfo(new Date());
+            const selectEl = document.getElementById('global-month');
+            const hintEl = document.getElementById('solar-term-hint');
+            if (selectEl) {
+                selectEl.value = info.wuxing;
+            }
+            if (hintEl) {
+                hintEl.innerHTML = `✨ 依今日節氣自動帶入：<b>${info.term}（${info.branch}）</b> ‧ <span class="${wuxingColors[info.wuxing]} font-bold">${info.wuxing}旺司權</span>（可隨時手動更改）`;
+            }
+            if (shouldRerender && castLines.length === 6) {
+                renderResult();
+            }
+        }
+
         function onMonthChange() {
+            const info = getSolarTermMonthInfo(new Date());
+            const selectEl = document.getElementById('global-month');
+            const hintEl = document.getElementById('solar-term-hint');
+            if (hintEl && selectEl) {
+                if (selectEl.value === info.wuxing) {
+                    hintEl.innerHTML = `✨ 依今日節氣自動帶入：<b>${info.term}（${info.branch}）</b> ‧ <span class="${wuxingColors[info.wuxing]} font-bold">${info.wuxing}旺司權</span>（可隨時手動更改）`;
+                } else if (selectEl.value) {
+                    hintEl.innerHTML = `🖐️ 已手動切換為 <span class="${wuxingColors[selectEl.value]} font-bold">${selectEl.value}旺</span>（今日節氣原為 ${info.term} ‧ ${info.wuxing}旺）`;
+                } else {
+                    hintEl.innerHTML = `🖐️ 已手動設為「未指定」（今日節氣為 ${info.term} ‧ ${info.wuxing}旺）`;
+                }
+            }
             if (castLines.length === 6) {
                 renderResult();
             }
@@ -1850,6 +1948,8 @@
                 id: Date.now(),
                 title: title,
                 notes: notes,
+                outcomeStatus: "pending",
+                outcomeNote: "",
                 lines: [...castLines],
                 month: currentMonth,
                 method: currentMethodInfo,
@@ -1878,6 +1978,8 @@
             document.getElementById('edit-record-title').value = record.title || "";
             document.getElementById('edit-month').value = record.month || "";
             document.getElementById('edit-record-notes').value = record.notes || "";
+            document.getElementById('edit-outcome-status').value = record.outcomeStatus || "pending";
+            document.getElementById('edit-outcome-note').value = record.outcomeNote || "";
 
             const meihuaFields = document.getElementById('edit-meihua-fields');
             if (record.meihua || (record.method && record.method.includes("梅花易數"))) {
@@ -1917,6 +2019,8 @@
             record.title = newTitle;
             record.month = document.getElementById('edit-month').value;
             record.notes = document.getElementById('edit-record-notes').value.trim();
+            record.outcomeStatus = document.getElementById('edit-outcome-status').value || "pending";
+            record.outcomeNote = document.getElementById('edit-outcome-note').value.trim();
 
             const meihuaFields = document.getElementById('edit-meihua-fields');
             if (!meihuaFields.classList.contains('hidden')) {
@@ -1965,22 +2069,136 @@
             openEditModal(id);
         }
 
+        let currentRecordStatusFilter = 'all';
+        let currentRecordTopicFilter = 'all';
+
+        function setRecordStatusFilter(status) {
+            currentRecordStatusFilter = status;
+            document.querySelectorAll('.record-filter-btn').forEach(btn => {
+                const active = btn.getAttribute('data-status-filter') === status;
+                btn.classList.toggle('bg-amber-800', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('border-amber-800', active);
+                if (!active) {
+                    btn.classList.remove('bg-amber-800', 'text-white', 'border-amber-800');
+                    btn.classList.add('bg-white');
+                }
+            });
+            loadRecordsList();
+        }
+
+        function setRecordTopicFilter(topic) {
+            currentRecordTopicFilter = topic;
+            document.querySelectorAll('.record-topic-btn').forEach(btn => {
+                const active = btn.getAttribute('data-topic-filter') === topic;
+                btn.classList.toggle('bg-amber-700', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('border-amber-700', active);
+                if (!active) {
+                    btn.classList.remove('bg-amber-700', 'text-white', 'border-amber-700');
+                    btn.classList.add('bg-white');
+                }
+            });
+            loadRecordsList();
+        }
+
+        function clearRecordsSearch() {
+            const input = document.getElementById('records-search-input');
+            if (input) input.value = '';
+            loadRecordsList();
+        }
+
+        function cycleOutcomeStatus(id) {
+            const records = getStoredRecords();
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+            const order = ['pending', 'accurate', 'inaccurate'];
+            const cur = record.outcomeStatus || 'pending';
+            record.outcomeStatus = order[(order.indexOf(cur) + 1) % order.length];
+            setStoredRecords(records);
+            pushRecordToCloud(record);
+            loadRecordsList();
+        }
+
+        function matchesRecordTopic(r, topic) {
+            if (topic === 'all') return true;
+            const text = `${r.title || ''} ${r.notes || ''} ${r.outcomeNote || ''}`;
+            if (topic === 'invest') {
+                return /(股|正二|期貨|BTC|買|賣|減碼|現金|機子|20週|60週|創高|跌破|左側|右側|投資|融資|現股)/i.test(text);
+            }
+            if (topic === 'health') {
+                return /(醫|手術|眼|左眼|右眼|視力|拇指|骨科|中醫|胃痛|急診|停藥|健檢|病變|葡萄糖|痊癒|看診|治療)/i.test(text);
+            }
+            return true;
+        }
+
         function loadRecordsList() {
             const container = document.getElementById('records-list');
             if (!container) return;
             const records = getStoredRecords();
             updateRecordBadge();
 
+            const searchInput = document.getElementById('records-search-input');
+            const clearBtn = document.getElementById('btn-clear-search');
+            const summaryEl = document.getElementById('records-filter-summary');
+            const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+            if (clearBtn) {
+                clearBtn.classList.toggle('hidden', !query);
+            }
+
+            // 統計全局應驗狀態
+            let pendingCnt = 0, accurateCnt = 0, inaccurateCnt = 0;
+            records.forEach(r => {
+                const st = r.outcomeStatus || 'pending';
+                if (st === 'accurate') accurateCnt++;
+                else if (st === 'inaccurate') inaccurateCnt++;
+                else pendingCnt++;
+            });
+            const settledCnt = accurateCnt + inaccurateCnt;
+            const accRateText = settledCnt > 0 ? ` ‧ 準確率 ${Math.round((accurateCnt / settledCnt) * 100)}%` : '';
+
             if (records.length === 0) {
+                if (summaryEl) summaryEl.textContent = '共 0 筆紀錄';
                 container.innerHTML = '<p class="text-gray-500 text-sm text-center py-6">目前尚無儲存的卦象紀錄。</p>';
                 return;
             }
 
-            container.innerHTML = records.map(r => {
+            const filteredRecords = records.filter(r => {
+                const st = r.outcomeStatus || 'pending';
+                if (currentRecordStatusFilter !== 'all' && st !== currentRecordStatusFilter) return false;
+                if (!matchesRecordTopic(r, currentRecordTopicFilter)) return false;
+                if (query) {
+                    const orig = calculateHexagram(r.lines, "orig");
+                    const hasMoving = r.lines.some(v => v === 6 || v === 9);
+                    const changed = hasMoving ? calculateHexagram(r.lines, "changed").name : "靜卦";
+                    const haystack = `${r.title || ''} ${r.notes || ''} ${r.outcomeNote || ''} ${orig.name} ${changed} ${r.month || ''}`.toLowerCase();
+                    if (!haystack.includes(query)) return false;
+                }
+                return true;
+            });
+
+            if (summaryEl) {
+                summaryEl.textContent = `顯示 ${filteredRecords.length}/${records.length} 筆｜⏳${pendingCnt} ✅${accurateCnt} ❌${inaccurateCnt}${accRateText}`;
+            }
+
+            if (filteredRecords.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-6">找不到符合篩選條件的卦象紀錄。</p>';
+                return;
+            }
+
+            const outcomeBadgeMap = {
+                pending:    { label: '⏳ 觀察中',   cls: 'bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200' },
+                accurate:   { label: '✅ 應驗準確', cls: 'bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200' },
+                inaccurate: { label: '❌ 未應驗',   cls: 'bg-rose-100 text-rose-800 border-rose-300 hover:bg-rose-200' }
+            };
+
+            container.innerHTML = filteredRecords.map(r => {
                 const orig = calculateHexagram(r.lines, "orig");
                 const hasMoving = r.lines.some(v => v === 6 || v === 9);
                 const changed = hasMoving ? calculateHexagram(r.lines, "changed").name : "靜卦";
                 const dateStr = new Date(r.createdAt || r.id).toLocaleString('zh-TW', { hour12: false });
+                const outcomeStatus = r.outcomeStatus || 'pending';
+                const outcomeMeta = outcomeBadgeMap[outcomeStatus] || outcomeBadgeMap.pending;
 
                 const hasMeihua = r.meihua || (r.method && r.method.includes("梅花易數"));
                 const num1Display = r.meihua?.num1 !== undefined ? r.meihua.num1 : (r.method?.match(/(?:上|天數|第一數)(\d+)/)?.[1] || "—");
@@ -2032,6 +2250,18 @@
                     </div>
                 `;
 
+                const outcomeNoteHtml = r.outcomeNote ? `
+                    <div class="text-xs bg-emerald-50/70 border border-emerald-200 text-emerald-950 p-2.5 rounded mt-1.5 flex items-start gap-2">
+                        <span class="font-bold shrink-0 text-emerald-900">📌 實際結果：</span>
+                        <span class="leading-relaxed flex-1">${r.outcomeNote}</span>
+                    </div>
+                ` : `
+                    <div class="text-xs bg-gray-50/60 text-gray-400 border border-gray-100 px-2.5 py-1.5 rounded mt-1.5 flex items-center justify-between">
+                        <span>📌 實際結果：尚未記錄覆盤結果</span>
+                        <button onclick="openEditModal(${r.id})" class="text-emerald-700 hover:text-emerald-900 font-semibold underline text-[11px]">➕ 填寫實際結果</button>
+                    </div>
+                `;
+
                 return `
                 <div class="flex flex-col bg-white p-4 md:p-5 rounded-lg border border-gray-200 shadow-sm gap-2 hover:border-amber-400 transition">
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 pb-2 border-b border-gray-100">
@@ -2039,6 +2269,9 @@
                             <button onclick="restoreRecord(${r.id})" class="font-bold text-amber-900 hover:text-[#8b2626] text-base text-left hover:underline flex items-center gap-1.5 cursor-pointer transition group" title="點擊直接進入此卦排盤">
                                 <span class="group-hover:translate-x-0.5 transition-transform">☯ ${r.title}</span>
                                 <span class="text-[11px] text-amber-700 bg-amber-50 group-hover:bg-amber-100 px-2 py-0.5 rounded border border-amber-300 font-normal">進入排盤 ↗</span>
+                            </button>
+                            <button onclick="cycleOutcomeStatus(${r.id})" class="text-xs px-2.5 py-0.5 rounded-full font-bold border transition cursor-pointer ${outcomeMeta.cls}" title="點擊快速切換應驗狀態">
+                                ${outcomeMeta.label}
                             </button>
                             <span class="bg-amber-100 text-amber-800 text-xs px-2.5 py-0.5 rounded font-bold border border-amber-200">
                                 ${orig.name} 之 ${changed}
@@ -2061,6 +2294,7 @@
                     </div>
                     ${fourFactorsHtml}
                     ${notesHtml}
+                    ${outcomeNoteHtml}
                     <div class="text-[11px] text-gray-400 mt-1">建立時間：${dateStr}</div>
                 </div>`;
             }).join('');
@@ -2077,6 +2311,7 @@
 
             if (record.month) {
                 document.getElementById('global-month').value = record.month;
+                onMonthChange();
             }
 
             if (record.meihua) {
@@ -2180,6 +2415,7 @@
         }
 
         initFirebase();
+        applyAutoSolarTermMonth(false);
         updateRecordBadge();
         resetDivination();
     </script>
