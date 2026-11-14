@@ -573,53 +573,81 @@
         };
 
         const trigramData = [
-            { name: "坤", wuxing: "土", yinyang: "陰", yyWuxing: "陰土", yyTrait: "柔順包容" },
-            { name: "震", wuxing: "木", yinyang: "陽", yyWuxing: "陽木", yyTrait: "剛動奮發" },
-            { name: "坎", wuxing: "水", yinyang: "陽", yyWuxing: "陽水", yyTrait: "險陷奔流" },
-            { name: "兌", wuxing: "金", yinyang: "陰", yyWuxing: "陰金", yyTrait: "柔悅敏銳" },
-            { name: "艮", wuxing: "土", yinyang: "陽", yyWuxing: "陽土", yyTrait: "剛止穩重" },
-            { name: "離", wuxing: "火", yinyang: "陰", yyWuxing: "陰火", yyTrait: "明麗依附" },
-            { name: "巽", wuxing: "木", yinyang: "陰", yyWuxing: "陰木", yyTrait: "柔順滲透" },
-            { name: "乾", wuxing: "金", yinyang: "陽", yyWuxing: "陽金", yyTrait: "剛健峻拔" }
+            { name: "坤", wuxing: "土", yinyang: "－", yyWuxing: "－土", yyTrait: "柔順包容" },
+            { name: "震", wuxing: "木", yinyang: "＋", yyWuxing: "＋木", yyTrait: "剛動奮發" },
+            { name: "坎", wuxing: "水", yinyang: "",   yyWuxing: "水",   yyTrait: "險陷奔流" },
+            { name: "兌", wuxing: "金", yinyang: "－", yyWuxing: "－金", yyTrait: "柔悅敏銳" },
+            { name: "艮", wuxing: "土", yinyang: "＋", yyWuxing: "＋土", yyTrait: "剛止穩重" },
+            { name: "離", wuxing: "火", yinyang: "",   yyWuxing: "火",   yyTrait: "明麗依附" },
+            { name: "巽", wuxing: "木", yinyang: "－", yyWuxing: "－木", yyTrait: "柔順滲透" },
+            { name: "乾", wuxing: "金", yinyang: "＋", yyWuxing: "＋金", yyTrait: "剛健峻拔" }
         ];
 
         function getYinYangStrengthCompare(up, low, upTY, lowTY) {
-            const upIsYang = up.yinyang === "陽";
-            const lowIsYang = low.yinyang === "陽";
+            const upYY = up.yinyang;
+            const lowYY = low.yinyang;
             let tag = "", badgeClass = "", detail = "";
 
             let tiGua = null, yongGua = null;
             if (upTY === "[體]" && lowTY === "[用]") { tiGua = up; yongGua = low; }
             else if (lowTY === "[體]" && upTY === "[用]") { tiGua = low; yongGua = up; }
 
-            if (upIsYang && lowIsYang) {
-                tag = `☀️ 雙陽並強 (${up.yyWuxing}＋${low.yyWuxing})`;
+            if (!upYY && !lowYY) {
+                tag = `💧🔥 水火純象 (${up.yyWuxing} / ${low.yyWuxing})`;
+                badgeClass = "bg-purple-50 text-purple-800 border-purple-200";
+                detail = "坎水與離火皆不分陰陽（＋－），純以五行生剋與本位強弱論吉凶。";
+            } else if (upYY === "＋" && lowYY === "＋") {
+                tag = `＋＋ 雙陽並強 (${up.yyWuxing} / ${low.yyWuxing})`;
                 badgeClass = "bg-amber-100 text-amber-900 border-amber-300";
-                detail = "上下皆陽卦，氣勢剛猛外顯、節奏快速果決，宜防過剛易折。";
-            } else if (!upIsYang && !lowIsYang) {
-                tag = `🌙 雙陰沉潛 (${up.yyWuxing}＋${low.yyWuxing})`;
+                detail = "上下皆為（＋）剛卦，氣勢剛猛外顯、節奏快速果決，宜防過剛易折。";
+            } else if (upYY === "－" && lowYY === "－") {
+                tag = `－－ 雙陰沉潛 (${up.yyWuxing} / ${low.yyWuxing})`;
                 badgeClass = "bg-slate-100 text-slate-700 border-slate-300";
-                detail = "上下皆陰卦，氣勢柔和內斂、暗中醞釀，宜沉穩守成、靜觀其變。";
-            } else if (tiGua && yongGua) {
-                if (tiGua.yinyang === "陽" && yongGua.yinyang === "陰") {
-                    tag = `⚖️ 體陽用陰 (體勢較強)`;
-                    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
-                    detail = `體為${tiGua.yyWuxing}（剛強主動），用為${yongGua.yyWuxing}（柔順從之），我方氣勢與主導力佔優。`;
-                } else {
-                    tag = `⚖️ 體陰用陽 (用勢較猛)`;
-                    badgeClass = "bg-orange-50 text-orange-800 border-orange-200";
-                    detail = `體為${tiGua.yyWuxing}（內斂柔順），用為${yongGua.yyWuxing}（外力剛猛），對方氣勢較強，宜以柔克剛、借力使力。`;
-                }
-            } else {
-                if (upIsYang) {
-                    tag = `🌗 外陽內陰 (${up.yyWuxing}強 / ${low.yyWuxing}柔)`;
+                detail = "上下皆為（－）柔卦，氣勢柔和內斂、暗中醞釀，宜沉穩守成、靜觀其變。";
+            } else if (upYY && lowYY) {
+                if (tiGua && yongGua) {
+                    if (tiGua.yinyang === "＋") {
+                        tag = `⚖️ 體＋用－ (體勢較強)`;
+                        badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                        detail = `體為${tiGua.yyWuxing}（剛強主動），用為${yongGua.yyWuxing}（柔順從之），我方氣勢與主導力佔優。`;
+                    } else {
+                        tag = `⚖️ 體－用＋ (用勢較猛)`;
+                        badgeClass = "bg-orange-50 text-orange-800 border-orange-200";
+                        detail = `體為${tiGua.yyWuxing}（內斂柔順），用為${yongGua.yyWuxing}（外力剛猛），對方氣勢較強，宜以柔克剛、借力使力。`;
+                    }
+                } else if (upYY === "＋") {
+                    tag = `⚖️ 外＋內－ (${up.yyWuxing}強 / ${low.yyWuxing}柔)`;
                     badgeClass = "bg-sky-50 text-sky-800 border-sky-200";
                     detail = "外剛內柔之象，外部氣勢較強顯，內在宜保持沉穩柔和。";
                 } else {
-                    tag = `🌗 外陰內陽 (${up.yyWuxing}柔 / ${low.yyWuxing}強)`;
+                    tag = `⚖️ 外－內＋ (${up.yyWuxing}柔 / ${low.yyWuxing}強)`;
                     badgeClass = "bg-indigo-50 text-indigo-800 border-indigo-200";
                     detail = "外柔內剛之象，內心主見堅定強盛，外在表現溫和圓融。";
                 }
+            } else if (tiGua && yongGua) {
+                if (tiGua.yinyang === "＋") {
+                    tag = `＋ 體剛用化 (${tiGua.yyWuxing} / ${yongGua.yyWuxing})`;
+                    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                    detail = `體為${tiGua.yyWuxing}（剛強主動），用為${yongGua.yyWuxing}（水火無分＋－，隨勢而化），體勢偏強。`;
+                } else if (tiGua.yinyang === "－") {
+                    tag = `－ 體柔用化 (${tiGua.yyWuxing} / ${yongGua.yyWuxing})`;
+                    badgeClass = "bg-slate-100 text-slate-700 border-slate-300";
+                    detail = `體為${tiGua.yyWuxing}（內斂柔順），用為${yongGua.yyWuxing}（水火無分＋－，隨勢而化），宜沉穩應對。`;
+                } else if (yongGua.yinyang === "＋") {
+                    tag = `＋ 用剛體化 (${tiGua.yyWuxing} / ${yongGua.yyWuxing})`;
+                    badgeClass = "bg-orange-50 text-orange-800 border-orange-200";
+                    detail = `體為${tiGua.yyWuxing}（無分＋－），用為${yongGua.yyWuxing}（外力剛猛），外勢較強，宜順勢借力。`;
+                } else {
+                    tag = `－ 用柔體化 (${tiGua.yyWuxing} / ${yongGua.yyWuxing})`;
+                    badgeClass = "bg-sky-50 text-sky-800 border-sky-200";
+                    detail = `體為${tiGua.yyWuxing}（無分＋－），用為${yongGua.yyWuxing}（外力柔和），互動相對平緩。`;
+                }
+            } else {
+                const activeGua = upYY ? up : low;
+                const neutralGua = upYY ? low : up;
+                tag = `${activeGua.yinyang} ${up.yyWuxing} / ${low.yyWuxing}`;
+                badgeClass = activeGua.yinyang === "＋" ? "bg-amber-50 text-amber-900 border-amber-200" : "bg-slate-100 text-slate-700 border-slate-300";
+                detail = `${activeGua.yyWuxing}帶${activeGua.yinyang}（${activeGua.yyTrait}），${neutralGua.yyWuxing}無分＋－（${neutralGua.yyTrait}）。`;
             }
             return { tag, badgeClass, detail };
         }
@@ -748,20 +776,20 @@
             let tiScore = 0;
             let yongScore = 0;
 
-            // 陰陽強弱微調（陽卦剛強外顯 +5，並統計全局陰陽比重）
-            let yangCount = 0, yinCount = 0;
+            // 陰陽(＋/－)強弱微調（僅金木土分＋/－，水火無陰陽；＋卦剛強外顯 +5）
+            let plusCount = 0, minusCount = 0;
             const allTrigramIdxs = [
                 origHex?.upperVal, origHex?.lowerVal,
                 mutualHex?.upperVal, mutualHex?.lowerVal,
                 changedHex?.upperVal, changedHex?.lowerVal
             ].filter(idx => idx !== undefined && trigramData[idx]);
             allTrigramIdxs.forEach(idx => {
-                if (trigramData[idx].yinyang === "陽") yangCount++;
-                else yinCount++;
+                if (trigramData[idx].yinyang === "＋") plusCount++;
+                else if (trigramData[idx].yinyang === "－") minusCount++;
             });
             const tiTrigramIdx = (actualTiPos === "upper") ? origHex?.upperVal : origHex?.lowerVal;
             const tiGuaObj = (tiTrigramIdx !== undefined) ? trigramData[tiTrigramIdx] : null;
-            if (tiGuaObj && tiGuaObj.yinyang === "陽") {
+            if (tiGuaObj && tiGuaObj.yinyang === "＋") {
                 tiScore += 5;
             }
 
@@ -898,10 +926,12 @@
                 if (!canFormParty) tags.push(`${tiWuxing}卦不論黨多`);
             }
 
-            if (allTrigramIdxs.length > 0) {
-                if (yangCount >= 4) tags.push(`☀️ 陽盛剛強 (${yangCount}陽${yinCount}陰)`);
-                else if (yinCount >= 4) tags.push(`🌙 陰盛沉潛 (${yangCount}陽${yinCount}陰)`);
-                else tags.push(`🌗 陰陽相濟 (${yangCount}陽${yinCount}陰)`);
+            if (plusCount + minusCount > 0) {
+                if (plusCount > minusCount) tags.push(`＋ 陽氣偏盛 (${plusCount}＋ ${minusCount}－)`);
+                else if (minusCount > plusCount) tags.push(`－ 陰氣偏盛 (${plusCount}＋ ${minusCount}－)`);
+                else tags.push(`⚖️ ＋－均衡 (${plusCount}＋ ${minusCount}－)`);
+            } else if (allTrigramIdxs.length > 0) {
+                tags.push("💧🔥 水火純象 (無分＋－)");
             }
 
             // 生成專屬通關搭橋看板 HTML
@@ -1256,13 +1286,14 @@
 
             const getWuXingHtml = (upperIdx, lowerIdx, upTY, lowTY) => {
                 let up = trigramData[upperIdx]; let low = trigramData[lowerIdx];
-                let upYYIcon = up.yinyang === "陽" ? "☀️" : "🌙";
-                let lowYYIcon = low.yinyang === "陽" ? "☀️" : "🌙";
-                let upYYBg = up.yinyang === "陽" ? "bg-amber-100/90 text-amber-950 border-amber-300" : "bg-slate-100 text-slate-700 border-slate-300";
-                let lowYYBg = low.yinyang === "陽" ? "bg-amber-100/90 text-amber-950 border-amber-300" : "bg-slate-100 text-slate-700 border-slate-300";
+                const getYYBadge = (g) => {
+                    if (g.yinyang === "＋") return `<span class="text-[10px] px-1.5 py-0.5 rounded border bg-amber-100/90 text-amber-950 border-amber-300 font-medium">＋ ${g.yyTrait}</span>`;
+                    if (g.yinyang === "－") return `<span class="text-[10px] px-1.5 py-0.5 rounded border bg-slate-100 text-slate-700 border-slate-300 font-medium">－ ${g.yyTrait}</span>`;
+                    return `<span class="text-[10px] px-1.5 py-0.5 rounded border bg-stone-50 text-stone-600 border-stone-200 font-medium">${g.yyTrait}</span>`;
+                };
 
-                let upWuxingSpan = `<span class="${wuxingColors[up.wuxing]} font-bold">${up.yyWuxing}</span> <span class="text-[10px] px-1.5 py-0.5 rounded border ${upYYBg} font-medium">${upYYIcon} ${up.yyTrait}</span>`;
-                let lowWuxingSpan = `<span class="${wuxingColors[low.wuxing]} font-bold">${low.yyWuxing}</span> <span class="text-[10px] px-1.5 py-0.5 rounded border ${lowYYBg} font-medium">${lowYYIcon} ${low.yyTrait}</span>`;
+                let upWuxingSpan = `<span class="${wuxingColors[up.wuxing]} font-bold">${up.yyWuxing}</span> ${getYYBadge(up)}`;
+                let lowWuxingSpan = `<span class="${wuxingColors[low.wuxing]} font-bold">${low.yyWuxing}</span> ${getYYBadge(low)}`;
                 
                 let tiObj = null, yongObj = null;
                 if (upTY === "[體]" && lowTY === "[用]") { tiObj = up; yongObj = low; }
