@@ -215,6 +215,7 @@
                         <button id="btn-clear-compare" onclick="clearCompareSelection()" class="hidden px-2.5 py-1 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 text-xs rounded transition border border-indigo-300">清除勾選</button>
                         <button id="btn-sync-now" onclick="syncRecordsFromCloud(false)" class="hidden px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded transition shadow">🔄 立即同步</button>
                         <button id="btn-migrate-local" onclick="migrateLocalRecordsToCloud()" class="hidden px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white text-xs rounded transition shadow">☁️ 上傳本機舊紀錄</button>
+                        <button id="btn-clear-local-only" onclick="clearLocalOnlyRecords()" class="hidden px-3 py-1 bg-slate-200 hover:bg-slate-300 text-slate-800 text-xs rounded transition border border-slate-300">🧹 清除本機舊檔</button>
                         <button onclick="exportRecordsJson()" class="px-3 py-1 bg-amber-800 hover:bg-amber-900 text-white text-xs rounded transition shadow">📤 匯出備份 (JSON)</button>
                         <label class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white text-xs rounded transition shadow cursor-pointer">
                             📥 匯入檔案 <input type="file" accept=".json" onchange="importRecordsFile(event)" class="hidden">
@@ -472,12 +473,12 @@
                     <div class="bg-white p-4 rounded-xl border border-amber-900/15 shadow-xs mb-5">
                         <div class="flex justify-between items-center text-xs md:text-sm font-bold mb-2">
                             <span class="text-emerald-800 flex items-center gap-1.5">
-                                <span>🟢 體黨能量 (生助體卦)：</span>
+                                <span id="master-ti-label">🟢 體黨能量 (生助體卦)：</span>
                                 <span id="master-ti-percent">50%</span>
                             </span>
                             <span class="text-xs text-gray-400">勢力天平</span>
                             <span class="text-rose-800 flex items-center gap-1.5">
-                                <span>用黨能量 (剋洩體卦)：</span>
+                                <span id="master-yong-label">用黨能量 (剋洩體卦)：</span>
                                 <span id="master-yong-percent">50%</span>
                             </span>
                         </div>
@@ -486,7 +487,7 @@
                             <div id="master-ti-bar" class="bg-emerald-600 h-full transition-all duration-700 ease-out" style="width: 50%"></div>
                             <div id="master-yong-bar" class="bg-rose-600 h-full transition-all duration-700 ease-out" style="width: 50%"></div>
                         </div>
-                        <div class="flex justify-between items-center text-[11px] text-gray-500 mt-2">
+                        <div id="master-party-caption" class="flex justify-between items-center text-[11px] text-gray-500 mt-2">
                             <span>【體黨多 ‧ 體勢盛 ➔ 問事皆吉】</span>
                             <span>【用黨多 ‧ 體勢衰 ➔ 問事皆凶】</span>
                         </div>
@@ -535,7 +536,7 @@
                         <!-- 體黨陣營 -->
                         <div class="bg-emerald-50/80 p-3 rounded-lg border border-emerald-200">
                             <div class="font-bold text-emerald-900 mb-1 flex items-center justify-between">
-                                <span>🛡️ 體黨生扶隊伍 (助我之神)：</span>
+                                <span id="master-ti-team-title">🛡️ 體黨生扶隊伍 (助我之神)：</span>
                                 <span id="master-ti-count" class="text-[11px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded font-semibold">0 卦</span>
                             </div>
                             <div id="master-ti-list" class="space-y-1 text-emerald-800">--</div>
@@ -544,7 +545,7 @@
                         <!-- 用黨陣營 -->
                         <div class="bg-rose-50/80 p-3 rounded-lg border border-rose-200">
                             <div class="font-bold text-rose-900 mb-1 flex items-center justify-between">
-                                <span>⚔️ 用黨剋洩隊伍 (敵煞洩氣)：</span>
+                                <span id="master-yong-team-title">⚔️ 用黨剋洩隊伍 (敵煞洩氣)：</span>
                                 <span id="master-yong-count" class="text-[11px] bg-rose-100 text-rose-800 px-1.5 py-0.5 rounded font-semibold">0 卦</span>
                             </div>
                             <div id="master-yong-list" class="space-y-1 text-rose-800">--</div>
@@ -985,8 +986,8 @@
 
             // 特殊格局判定（依規則：僅【金、土】二行才論「體黨多 / 用黨多」，木、火、水不論黨多）
             const canFormParty = (tiWuxing === "金" || tiWuxing === "土");
-            const isAllTi = (yongParty.length === 0 && tiParty.length >= 2);
-            const isAllYong = (tiParty.length === 0 && yongParty.length >= 2);
+            const isAllTi = canFormParty && (yongParty.length === 0 && tiParty.length >= 2);
+            const isAllYong = canFormParty && (tiParty.length === 0 && yongParty.length >= 2);
 
             let patternTitle = "";
             let patternClass = "";
@@ -1162,6 +1163,8 @@
 
             return {
                 isStatic,
+                canFormParty,
+                tiWuxing,
                 patternTitle,
                 patternClass,
                 tags,
@@ -1755,6 +1758,25 @@
                 document.getElementById('master-ti-bar').style.width = `${comprehensive.tiPercent}%`;
                 document.getElementById('master-yong-bar').style.width = `${comprehensive.yongPercent}%`;
 
+                const tiLabelEl = document.getElementById('master-ti-label');
+                const yongLabelEl = document.getElementById('master-yong-label');
+                const partyCaptionEl = document.getElementById('master-party-caption');
+                const tiTeamTitleEl = document.getElementById('master-ti-team-title');
+                const yongTeamTitleEl = document.getElementById('master-yong-team-title');
+                if (comprehensive.canFormParty) {
+                    if (tiLabelEl) tiLabelEl.innerText = '🟢 體黨能量 (生助體卦)：';
+                    if (yongLabelEl) yongLabelEl.innerText = '用黨能量 (剋洩體卦)：';
+                    if (partyCaptionEl) partyCaptionEl.innerHTML = '<span>【體黨多 ‧ 體勢盛 ➔ 問事皆吉】</span><span>【用黨多 ‧ 體勢衰 ➔ 問事皆凶】</span>';
+                    if (tiTeamTitleEl) tiTeamTitleEl.innerText = '🛡️ 體黨生扶隊伍 (助我之神)：';
+                    if (yongTeamTitleEl) yongTeamTitleEl.innerText = '⚔️ 用黨剋洩隊伍 (敵煞洩氣)：';
+                } else {
+                    if (tiLabelEl) tiLabelEl.innerText = '🟢 生扶吉勢 (不論體黨)：';
+                    if (yongLabelEl) yongLabelEl.innerText = '剋洩阻力 (不論用黨)：';
+                    if (partyCaptionEl) partyCaptionEl.innerHTML = `<span class="text-amber-800 font-medium">ℹ️ 體卦屬【${comprehensive.tiWuxing}】不論體黨／用黨（僅金、土論黨多，木水火專看本用生剋與月令）</span>`;
+                    if (tiTeamTitleEl) tiTeamTitleEl.innerText = '🛡️ 生扶助益卦象 (非論體黨)：';
+                    if (yongTeamTitleEl) yongTeamTitleEl.innerText = '⚔️ 剋洩耗損卦象 (非論用黨)：';
+                }
+
                 const tagsContainer = document.getElementById('master-tags-container');
                 tagsContainer.innerHTML = comprehensive.tags.map(t => `<span class="px-2.5 py-1 text-xs font-bold bg-amber-100/90 text-amber-900 border border-amber-300 rounded-full shadow-2xs">${t}</span>`).join('');
 
@@ -1764,7 +1786,9 @@
 
                 const tiCountEl = document.getElementById('master-ti-count');
                 const tiListEl = document.getElementById('master-ti-list');
-                tiCountEl.innerText = `${comprehensive.tiParty.length} 卦助體`;
+                tiCountEl.innerText = comprehensive.canFormParty
+                    ? `${comprehensive.tiParty.length} 卦助體`
+                    : `${comprehensive.tiParty.length} 卦生扶`;
                 tiListEl.innerHTML = comprehensive.tiParty.length > 0 
                     ? comprehensive.tiParty.map(p => `<div>• ${p.desc}</div>`).join('') 
                     : '<div class="text-gray-400 italic">無生扶卦象</div>';
@@ -1994,16 +2018,22 @@
                 const localOnly = localRaw.filter(r => !cloudIds.has(String(r.id)));
 
                 const btnMigrate = document.getElementById('btn-migrate-local');
+                const btnClearLocal = document.getElementById('btn-clear-local-only');
                 if (localOnly.length > 0) {
                     if (btnMigrate) {
                         btnMigrate.innerText = `☁️ 上傳本機舊紀錄 (${localOnly.length})`;
                         btnMigrate.classList.remove('hidden');
+                    }
+                    if (btnClearLocal) {
+                        btnClearLocal.innerText = `🧹 清除本機舊檔 (${localOnly.length})`;
+                        btnClearLocal.classList.remove('hidden');
                     }
                     if (promptMigrate && confirm(`偵測到這台設備的本機有 ${localOnly.length} 筆尚未上傳的舊紀錄，是否立即一鍵匯入到您的 Google 雲端帳號？（匯入後所有設備都能共用）`)) {
                         await migrateLocalRecordsToCloud();
                     }
                 } else {
                     if (btnMigrate) btnMigrate.classList.add('hidden');
+                    if (btnClearLocal) btnClearLocal.classList.add('hidden');
                 }
 
                 updateRecordBadge();
@@ -2035,13 +2065,36 @@
                 await batch.commit();
                 cloudRecordsCache = [...toUpload, ...(cloudRecordsCache || [])].sort((a, b) => b.id - a.id);
                 const btnMigrate = document.getElementById('btn-migrate-local');
+                const btnClearLocal = document.getElementById('btn-clear-local-only');
                 if (btnMigrate) btnMigrate.classList.add('hidden');
+                if (btnClearLocal) btnClearLocal.classList.add('hidden');
                 updateRecordBadge();
                 loadRecordsList();
                 alert(`✅ 成功將 ${toUpload.length} 筆本機紀錄上傳至您的 Google 雲端！`);
             } catch (err) {
                 alert("❌ 上傳失敗：" + (err.message || err));
             }
+        }
+
+        function clearLocalOnlyRecords() {
+            if (!currentUser || !db) return;
+            const localRaw = JSON.parse(localStorage.getItem('yijing_records_v3') || '[]');
+            const cloudIds = new Set((cloudRecordsCache || []).map(r => String(r.id)));
+            const localOnlyCount = localRaw.filter(r => !cloudIds.has(String(r.id))).length;
+            if (localOnlyCount === 0) {
+                const btnClearLocal = document.getElementById('btn-clear-local-only');
+                if (btnClearLocal) btnClearLocal.classList.add('hidden');
+                return;
+            }
+            if (!confirm(`確定要清除這台設備本機多出的 ${localOnlyCount} 筆未同步舊紀錄嗎？\n（放心，您的 Google 雲端紀錄完全不會受影響）`)) return;
+            localStorage.setItem('yijing_records_v3', JSON.stringify(cloudRecordsCache || []));
+            const btnMigrate = document.getElementById('btn-migrate-local');
+            const btnClearLocal = document.getElementById('btn-clear-local-only');
+            if (btnMigrate) btnMigrate.classList.add('hidden');
+            if (btnClearLocal) btnClearLocal.classList.add('hidden');
+            updateRecordBadge();
+            loadRecordsList();
+            alert(`✅ 已清除這台設備的 ${localOnlyCount} 筆本機舊檔！`);
         }
 
         async function pushRecordToCloud(record) {
@@ -2698,6 +2751,62 @@
             bar.classList.remove('hidden');
         }
 
+        function buildCompareHexagramDiagramHtml(item) {
+            const targetHex = item.hasMovingLines ? item.changedHex : item.origHex;
+            const upGua = trigramData[targetHex.upperVal];
+            const lowGua = trigramData[targetHex.lowerVal];
+            const upTY = item.tiPosition === 'upper' ? '體' : '用';
+            const lowTY = item.tiPosition === 'lower' ? '體' : '用';
+            const headerLabel = item.hasMovingLines
+                ? `變卦爻圖：<span class="text-[#8b2626]">${targetHex.name}</span>`
+                : `本卦爻圖（純靜）：<span class="text-[#8b2626]">${targetHex.name}</span>`;
+
+            const renderLineRow = (isYang, idx) => {
+                const bar = isYang
+                    ? `<div class="w-full h-2.5 bg-[#3d352e] rounded-xs"></div>`
+                    : `<div class="w-full flex justify-between gap-2"><div class="w-[44%] h-2.5 bg-[#3d352e] rounded-xs"></div><div class="w-[44%] h-2.5 bg-[#3d352e] rounded-xs"></div></div>`;
+                return `
+                    <div class="flex items-center gap-2 w-full">
+                        <span class="text-[10px] text-gray-500 w-7 text-right shrink-0">${yaoNames[idx]}</span>
+                        <div class="flex-1 max-w-[130px]">${bar}</div>
+                    </div>
+                `;
+            };
+
+            const buildSide = (g, ty) => {
+                const tyCls = ty === '體' ? 'bg-emerald-700 text-white' : 'bg-rose-700 text-white';
+                return `
+                    <div class="flex flex-col items-center justify-center shrink-0 w-16 border-l-2 border-amber-200/80 pl-1.5 py-0.5">
+                        <span class="font-extrabold text-base leading-tight px-2 py-0.5 rounded border shadow-2xs ${wuxingBadgeColors[g.wuxing]}">${g.name}</span>
+                        <span class="text-[11px] font-extrabold ${wuxingColors[g.wuxing]} mt-0.5">${g.yyWuxing}</span>
+                        <span class="text-[10px] px-1.5 py-0.2 rounded font-extrabold mt-0.5 ${tyCls}">${ty}</span>
+                    </div>
+                `;
+            };
+
+            let upperHtml = '';
+            for (let i = 3; i < 6; i++) upperHtml += renderLineRow(targetHex.binaryArray[i] === 1, i);
+            let lowerHtml = '';
+            for (let i = 0; i < 3; i++) lowerHtml += renderLineRow(targetHex.binaryArray[i] === 1, i);
+
+            return `
+                <div class="bg-[#fdfbf7] border border-amber-900/15 rounded-lg p-2.5">
+                    <div class="text-[11px] font-bold text-gray-600 mb-1.5 text-center border-b border-amber-200/60 pb-1">${headerLabel}</div>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex flex-col-reverse gap-1 flex-1 items-center">${upperHtml}</div>
+                            ${buildSide(upGua, upTY)}
+                        </div>
+                        <div class="w-full border-t border-dashed border-amber-300/80 my-0.5"></div>
+                        <div class="flex items-center justify-between gap-2">
+                            <div class="flex flex-col-reverse gap-1 flex-1 items-center">${lowerHtml}</div>
+                            ${buildSide(lowGua, lowTY)}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         function openCompareModal() {
             const records = getStoredRecords();
             const selected = compareRecordIds.map(id => records.find(r => r.id === id)).filter(Boolean);
@@ -2714,10 +2823,11 @@
 
             const summaryEl = document.getElementById('compare-summary-banner');
             if (summaryEl) {
+                const bestEnergyLabel = best.comprehensive.canFormParty ? "體黨能量" : "綜合吉勢";
                 if (diff === 0) {
-                    summaryEl.innerHTML = `⚖️ 綜合比較：目前這 ${analyzed.length} 卦的體黨能量相當（最高皆為 <b>${best.comprehensive.tiPercent}%</b>），建議再細看各方案的變卦生剋與情況備註做決定。`;
+                    summaryEl.innerHTML = `⚖️ 綜合比較：目前這 ${analyzed.length} 卦的${bestEnergyLabel}相當（最高皆為 <b>${best.comprehensive.tiPercent}%</b>），建議再細看各方案的變卦生剋與情況備註做決定。`;
                 } else {
-                    summaryEl.innerHTML = `🏆 系統綜合較佳方案：<span class="text-[#8b2626] font-extrabold">「${best.r.title}」</span>（體黨能量 <b>${best.comprehensive.tiPercent}%</b>，領先第二名 ${diff}%，格局為 ${best.comprehensive.patternTitle}）`;
+                    summaryEl.innerHTML = `🏆 系統綜合較佳方案：<span class="text-[#8b2626] font-extrabold">「${best.r.title}」</span>（${bestEnergyLabel} <b>${best.comprehensive.tiPercent}%</b>，領先第二名 ${diff}%，格局為 ${best.comprehensive.patternTitle}）`;
                 }
             }
 
@@ -2729,6 +2839,9 @@
                     const chgText = item.hasMovingLines ? item.changedHex.name : "靜卦";
                     const origRelTag = item.origRel ? item.origRel.text.split(" ")[0] : "—";
                     const chgRelTag = item.chgRel ? item.chgRel.text.split(" ")[0] : "無變卦";
+                    const tiCardLabel = c.canFormParty ? "🟢 體黨" : "🟢 吉勢";
+                    const yongCardLabel = c.canFormParty ? "用黨" : "阻力";
+                    const partyNoteBadge = c.canFormParty ? "" : ` <span class="text-[10px] font-normal text-gray-500">(${c.tiWuxing}不論黨)</span>`;
                     return `
                         <div class="bg-white rounded-xl p-4 border-2 ${isBest ? 'border-emerald-500 shadow-md' : 'border-amber-900/15 shadow-xs'} flex flex-col gap-2.5">
                             <div class="flex items-start justify-between gap-2 border-b border-gray-100 pb-2">
@@ -2742,8 +2855,8 @@
                             <div class="text-xs font-bold px-2.5 py-1 rounded border text-center ${c.patternClass}">${c.patternTitle}</div>
                             <div>
                                 <div class="flex justify-between text-xs font-bold mb-1">
-                                    <span class="text-emerald-700">🟢 體黨 ${c.tiPercent}%</span>
-                                    <span class="text-rose-700">用黨 ${c.yongPercent}% 🔴</span>
+                                    <span class="text-emerald-700">${tiCardLabel} ${c.tiPercent}%${partyNoteBadge}</span>
+                                    <span class="text-rose-700">${yongCardLabel} ${c.yongPercent}% 🔴</span>
                                 </div>
                                 <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden flex">
                                     <div class="bg-emerald-600 h-full" style="width:${c.tiPercent}%"></div>
@@ -2766,6 +2879,7 @@
                                     ${item.monthStrength ? `<span class="text-[11px] font-bold text-amber-900">${item.monthStrength.trim()}</span>` : ''}
                                 </div>
                             </div>
+                            ${buildCompareHexagramDiagramHtml(item)}
                             <p class="text-[11px] text-gray-600 leading-relaxed bg-amber-50/50 p-2 rounded border border-amber-100">${c.finalAdvise}</p>
                             ${item.r.outcomeNote ? `<div class="text-[11px] text-emerald-900 bg-emerald-50 p-2 rounded border border-emerald-200"><b>📌 實際結果：</b>${item.r.outcomeNote}</div>` : ''}
                         </div>
