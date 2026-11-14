@@ -19,7 +19,6 @@
             font-family: "Noto Serif TC", "PMingLiU", "Songti TC", serif;
         }
         
-        /* 爻的繪製樣式 */
         .yao-row {
             display: flex;
             align-items: center;
@@ -63,7 +62,6 @@
             margin-left: 6px;
         }
         
-        /* 動畫與捲軸 */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
@@ -92,12 +90,12 @@
         <!-- 頂部標題 -->
         <header class="bg-[#8b2626] text-[#fdfbf7] py-6 px-6 text-center border-b-[6px] border-amber-800">
             <h1 class="text-3xl md:text-4xl font-bold tracking-widest">易爻排盤與數字起卦系統</h1>
-            <p class="mt-2 text-amber-100 opacity-90 text-sm md:text-base">文王六爻 ‧ 梅花易數 ‧ 本互變卦詳解</p>
+            <p class="mt-2 text-amber-100 opacity-90 text-sm md:text-base">文王六爻 ‧ 梅花易數 ‧ 體用月令三卦大成總斷</p>
         </header>
 
         <div class="p-4 md:p-8">
             
-            <!-- 分頁切換按鈕 -->
+            <!-- 分頁按鈕 -->
             <div class="flex justify-center gap-3 mb-6 flex-wrap">
                 <button onclick="switchTab('coin')" id="tab-coin" class="px-5 py-2 border rounded-full font-semibold transition tab-active shadow-sm text-sm md:text-base">
                     🪙 硬幣起卦 (六爻)
@@ -138,7 +136,7 @@
                 </div>
             </div>
 
-            <!-- 數字起卦面板 (梅花易數) -->
+            <!-- 數字起卦面板 -->
             <div id="panel-number" class="hidden flex-col md:flex-row justify-between items-center bg-[#f5f0e6] p-4 rounded-lg shadow-inner mb-6 gap-3">
                 <div class="text-center md:text-left">
                     <h3 class="text-lg font-bold text-amber-900">梅花易數起卦法</h3>
@@ -185,7 +183,7 @@
                 </div>
             </div>
 
-            <!-- 投擲過程 / 狀態提示 -->
+            <!-- 投擲提示 -->
             <div class="mb-4 min-h-10 flex items-center justify-center space-x-1 md:space-x-2 text-sm md:text-base font-medium text-amber-900 flex-wrap" id="toss-history">
                 <span class="text-gray-400 text-sm">請選擇上方起卦方式開始...</span>
             </div>
@@ -197,7 +195,7 @@
                 <button onclick="saveCurrentRecord()" class="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-semibold rounded shadow transition whitespace-nowrap">儲存此卦</button>
             </div>
 
-            <!-- 結果呈現區 (本卦、互卦、變卦) -->
+            <!-- 結果呈現區 -->
             <div id="result-area">
                 <div id="result-panel" class="hidden flex flex-nowrap overflow-x-auto gap-4 md:gap-6 w-full pb-6 pt-2 snap-x snap-mandatory">
                     
@@ -244,10 +242,9 @@
                     </div>
                 </div>
 
-                <!-- 梅花易數大師級 綜合全局斷卦報告 -->
+                <!-- 🌟 梅花易數大師級 綜合全局斷卦報告 (體黨/用黨/通關搭橋) 🌟 -->
                 <div id="master-analysis-panel" class="hidden mt-6 bg-gradient-to-b from-amber-50/90 to-[#fdfbf7] border-2 border-amber-900/25 rounded-2xl p-5 md:p-7 shadow-lg fade-in">
                     
-                    <!-- 標題與印章列 -->
                     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b-2 border-amber-900/15 pb-4 mb-5">
                         <div>
                             <div class="flex items-center gap-2">
@@ -273,25 +270,23 @@
                                 <span id="master-yong-percent">50%</span>
                             </span>
                         </div>
-                        <!-- 進度條 -->
                         <div class="w-full bg-rose-200 h-3.5 rounded-full overflow-hidden flex shadow-inner">
                             <div id="master-ti-bar" class="bg-emerald-600 h-full transition-all duration-700 ease-out" style="width: 50%"></div>
                             <div id="master-yong-bar" class="bg-rose-600 h-full transition-all duration-700 ease-out" style="width: 50%"></div>
                         </div>
-                        <div class="flex justify-between items-center text-[11px] text-gray-500 mt-2">
-                            <span>【體黨多 ‧ 體勢盛 ➔ 問事皆吉】</span>
-                            <span>【用黨多 ‧ 體勢衰 ➔ 問事皆凶】</span>
+                        <div class="flex justify-between items-center text-[11px] text-gray-500 mt-2 font-semibold">
+                            <span class="text-emerald-800">【體黨多 ‧ 體勢盛 ➔ 問事皆吉】</span>
+                            <span class="text-rose-800">【用黨多 ‧ 體勢衰 ➔ 問事皆凶】</span>
                         </div>
                     </div>
 
-                    <!-- 特殊格局標籤與月令加成 -->
-                    <div class="flex flex-wrap items-center gap-2 mb-5" id="master-tags-container">
-                        <!-- 動態填入標籤 -->
-                    </div>
+                    <div class="flex flex-wrap items-center gap-2 mb-4" id="master-tags-container"></div>
 
-                    <!-- 三卦時空流轉演繹 (本卦 -> 互卦 -> 變卦) -->
+                    <!-- 🌉 通關搭橋法 專屬診斷看板 🌉 -->
+                    <div id="master-bridge-box" class="mb-5"></div>
+
+                    <!-- 三卦時空進程 -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5 text-xs md:text-sm">
-                        <!-- 本卦現況 -->
                         <div class="bg-white/95 p-3.5 rounded-xl border border-amber-900/15 shadow-2xs">
                             <div class="font-bold text-amber-950 flex items-center gap-1.5 mb-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-amber-700"></span>
@@ -299,7 +294,6 @@
                             </div>
                             <p id="master-stage-1" class="text-gray-700 leading-relaxed text-xs">--</p>
                         </div>
-                        <!-- 互卦過程 -->
                         <div class="bg-white/95 p-3.5 rounded-xl border border-amber-900/15 shadow-2xs">
                             <div class="font-bold text-amber-950 flex items-center gap-1.5 mb-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
@@ -307,7 +301,6 @@
                             </div>
                             <p id="master-stage-2" class="text-gray-700 leading-relaxed text-xs">--</p>
                         </div>
-                        <!-- 變卦結果 -->
                         <div class="bg-white/95 p-3.5 rounded-xl border border-amber-900/15 shadow-2xs">
                             <div class="font-bold text-amber-950 flex items-center gap-1.5 mb-1.5">
                                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-700"></span>
@@ -317,9 +310,8 @@
                         </div>
                     </div>
 
-                    <!-- 體黨 vs 用黨 陣營明細對照卡 -->
+                    <!-- 陣營清單 -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5 text-xs">
-                        <!-- 體黨陣營 -->
                         <div class="bg-emerald-50/80 p-3 rounded-lg border border-emerald-200">
                             <div class="font-bold text-emerald-900 mb-1 flex items-center justify-between">
                                 <span>🛡️ 體黨生扶隊伍 (助我之神)：</span>
@@ -328,7 +320,6 @@
                             <div id="master-ti-list" class="space-y-1 text-emerald-800">--</div>
                         </div>
 
-                        <!-- 用黨陣營 -->
                         <div class="bg-rose-50/80 p-3 rounded-lg border border-rose-200">
                             <div class="font-bold text-rose-900 mb-1 flex items-center justify-between">
                                 <span>⚔️ 用黨剋洩隊伍 (敵煞洩氣)：</span>
@@ -338,7 +329,7 @@
                         </div>
                     </div>
 
-                    <!-- 易道大師斷語總評框 -->
+                    <!-- 總評斷語 -->
                     <div class="bg-[#8b2626] text-amber-50 p-4 md:p-5 rounded-xl shadow-md border border-amber-700">
                         <div class="flex items-center gap-2 font-bold text-amber-200 text-sm mb-1.5">
                             <span>🔮 易道決策 ‧ 總合吉凶斷語：</span>
@@ -359,7 +350,6 @@
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs md:text-sm">
-                        <!-- 相生相剋法則 -->
                         <div class="bg-white p-3.5 rounded-lg border border-gray-200/90 shadow-xs space-y-2.5">
                             <div>
                                 <div class="font-bold text-gray-800 flex items-center gap-1.5">
@@ -383,16 +373,13 @@
                             </div>
                         </div>
 
-                        <!-- 當前月令得氣速查 -->
                         <div class="bg-white p-3.5 rounded-lg border border-gray-200/90 shadow-xs flex flex-col justify-between">
                             <div>
                                 <div class="font-bold text-amber-900 mb-2 flex items-center justify-between">
                                     <span>🗓️ 當前月令五行旺衰狀態：</span>
                                     <span id="wuxing-month-name" class="font-bold text-xs text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200"></span>
                                 </div>
-                                <div id="wuxing-month-detail" class="space-y-1.5 text-xs text-gray-600">
-                                    <!-- 動態填入五行旺相休囚死 -->
-                                </div>
+                                <div id="wuxing-month-detail" class="space-y-1.5 text-xs text-gray-600"></div>
                             </div>
                             <div class="text-[11px] text-gray-400 mt-2 pt-2 border-t border-gray-100">
                                 註：當令者旺、生體者相、體生者休、剋我者囚、受制者死。
@@ -484,7 +471,6 @@
             return "";
         }
 
-        // 上下卦五行生剋關係判定
         function getGuaWuxingRelation(upWuxing, lowWuxing) {
             if (!upWuxing || !lowWuxing) return null;
             if (upWuxing === lowWuxing) {
@@ -540,7 +526,7 @@
             return null;
         }
 
-        // ==================== 梅花易數 體.用.月令.三卦 綜合大成斷法 ====================
+        // ==================== 體.用.月令.三卦 綜合大成斷法 (通關搭橋、體黨盛衰) ====================
         function evaluateComprehensiveDivination(params) {
             const {
                 origHex, mutualHex, changedHex,
@@ -551,7 +537,6 @@
                 monthWuxing
             } = params;
 
-            // 若無動爻（六爻純靜），依《易經》貞悔原則：下卦為貞(主我方/體)，上卦為悔(主事態/用)
             let isStatic = false;
             let actualTiPos = tiPosition;
             if (!hasMovingLines || !actualTiPos) {
@@ -565,7 +550,6 @@
             const mutLowerW = mutualLowerWuxing;
             const chgYongWuxing = hasMovingLines ? ((actualTiPos === "upper") ? changedLowerWuxing : changedUpperWuxing) : origYongWuxing;
 
-            // 統計局中全部客觀外卦（用卦、互卦兩卦、變卦用卦）
             const fieldGuaList = [
                 { name: "本卦用卦", wuxing: origYongWuxing, stage: "現狀" },
                 { name: "互卦上卦", wuxing: mutUpperW, stage: "過程" },
@@ -600,7 +584,7 @@
                 }
             });
 
-            // 月令生剋權威加權
+            // 月令生剋加權
             let monthEffect = "";
             if (monthWuxing) {
                 if (monthWuxing === tiWuxing) {
@@ -623,7 +607,6 @@
             }
 
             // 通關搭橋法 (Bridging)
-            // 當有用黨剋體時，若局中或月令存在兩者中間的五行（如：金剋木，見水則金生水、水生木）
             const attackerList = yongParty.filter(y => wuxingRelations[y.wuxing].overcomes === tiWuxing);
             let bridgeFound = null;
             let greedFound = null;
@@ -644,7 +627,6 @@
                         }
                     }
                     
-                    // 貪生忘剋：攻擊者所生的五行在局中存在（貪戀生子而忘卻剋體）
                     const childElem = wuxingRelations[att.wuxing].generates;
                     const inFieldChild = fieldGuaList.some(f => f.wuxing === childElem && f.wuxing !== tiWuxing);
                     if (inFieldChild) {
@@ -658,13 +640,14 @@
                 }
             }
 
-            // 特殊格局判定
             const isAllTi = (yongParty.length === 0 && tiParty.length >= 2);
             const isAllYong = (tiParty.length === 0 && yongParty.length >= 2);
 
             let patternTitle = "";
             let patternClass = "";
             let tags = [];
+
+            if (isStatic) tags.push("六爻靜卦(內貞為體外悔為用)");
 
             if (isAllTi) {
                 patternTitle = "【全體吉格 ‧ 滿盤生扶所謀必遂】";
@@ -680,7 +663,6 @@
                 patternTitle = "【通關搭橋 ‧ 化煞為生逢凶化吉】";
                 patternClass = "border-teal-600 text-teal-800 bg-teal-50";
                 tags.push("通關搭橋", `${bridgeFound.attacker}生${bridgeFound.bridge}生${bridgeFound.target}`, "絕處逢生", "貴人調停");
-                // 通關效應：凶氣化為吉氣
                 yongScore = Math.max(10, yongScore - 35);
                 tiScore += 35;
             } else if (greedFound) {
@@ -703,11 +685,54 @@
                 tags.push("體用均勢", "互有牽制", "中平持重");
             }
 
+            // 通關搭橋診斷看板 HTML
+            let bridgeStatusHtml = "";
+            if (bridgeFound) {
+                bridgeStatusHtml = `
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 p-3.5 bg-teal-50 border-2 border-teal-300 rounded-xl text-teal-900 shadow-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">🌉</span>
+                            <div>
+                                <span class="font-bold text-sm text-teal-950">【通關搭橋成功 ‧ 化煞為生】</span>
+                                <span class="text-xs text-teal-800 ml-1">局逢【${bridgeFound.attacker}剋${bridgeFound.target}】，妙得【${bridgeFound.bridge}】氣居中搭橋！</span>
+                            </div>
+                        </div>
+                        <div class="text-xs font-semibold bg-white/95 px-2.5 py-1 rounded border border-teal-200 text-teal-800 shrink-0">
+                            連續相生：${bridgeFound.attacker} ➔ 生${bridgeFound.bridge} ➔ 生${bridgeFound.target} (轉凶為吉)
+                        </div>
+                    </div>
+                `;
+            } else if (attackerList.length > 0) {
+                const attW = attackerList[0].wuxing;
+                const neededBridge = wuxingRelations[attW].generates;
+                bridgeStatusHtml = `
+                    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-2 p-3.5 bg-rose-50 border-2 border-rose-300 rounded-xl text-rose-900 shadow-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xl">⚠️</span>
+                            <div>
+                                <span class="font-bold text-sm text-rose-950">【局逢相剋 ‧ 需人為通關搭橋】</span>
+                                <span class="text-xs text-rose-800 ml-1">局逢【${attW}剋體${tiWuxing}】受外力壓制，局中暫缺搭橋之神。</span>
+                            </div>
+                        </div>
+                        <div class="text-xs font-semibold bg-white/95 px-2.5 py-1 rounded border border-rose-300 text-rose-800 shrink-0">
+                            💡 解厄指引：現實中宜尋求屬【${neededBridge}】之五行（人事物/顧問/策略）來搭橋通關化煞！
+                        </div>
+                    </div>
+                `;
+            } else {
+                bridgeStatusHtml = `
+                    <div class="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-900 shadow-2xs text-xs">
+                        <span class="text-lg">✨</span>
+                        <span class="font-bold text-emerald-950">【氣息純和 ‧ 無須搭橋】：</span>
+                        <span class="text-emerald-800">全盤體用皆為生扶比和，無外煞剋體之險，生機流暢無阻，大吉大利！</span>
+                    </div>
+                `;
+            }
+
             const totalScore = Math.max(1, tiScore + yongScore);
             const tiPercent = Math.min(95, Math.max(5, Math.round((tiScore / totalScore) * 100)));
             const yongPercent = 100 - tiPercent;
 
-            // 三卦時空進程演繹 (本卦 -> 互卦 -> 變卦)
             let stage1 = "";
             if (wuxingRelations[origYongWuxing].generates === tiWuxing) stage1 = `本卦用生體（${origYongWuxing}生${tiWuxing}），現況得外部資源滋養，起步極順。`;
             else if (origYongWuxing === tiWuxing) stage1 = `本卦體用比和（${tiWuxing}同氣），現況和諧順暢，同儕志同道合。`;
@@ -725,11 +750,19 @@
             }
 
             let stage3 = "";
-            if (wuxingRelations[chgYongWuxing].generates === tiWuxing) stage3 = `變卦用生體（${chgYongWuxing}生${tiWuxing}），終局得外力大舉相助，圓滿收官，所求終能順遂！`;
-            else if (chgYongWuxing === tiWuxing) stage3 = `變卦體用比和（${tiWuxing}同氣），終局各方歡喜、皆大歡喜，平安大吉！`;
-            else if (wuxingRelations[chgYongWuxing].overcomes === tiWuxing) stage3 = `變卦用剋體（${chgYongWuxing}剋${tiWuxing}），終局暗藏阻難，謹防臨門一腳生變或晚節受挫！`;
-            else if (wuxingRelations[tiWuxing].generates === chgYongWuxing) stage3 = `變卦體生用（${tiWuxing}生${chgYongWuxing}），終局精力耗竭，收穫恐不如預期，防空忙一場！`;
-            else stage3 = `變卦體剋用（${tiWuxing}剋${chgYongWuxing}），終局憑意志與實力克難獲勝，收穫掌權！`;
+            if (!hasMovingLines) {
+                stage3 = `六爻純靜無動變，終局回歸本卦【${origHex.name}】，事態依既定規律推展，堅守正道必獲吉慶。`;
+            } else if (wuxingRelations[chgYongWuxing].generates === tiWuxing) {
+                stage3 = `變卦用生體（${chgYongWuxing}生${tiWuxing}），終局得外力大舉相助，圓滿收官，所求終能順遂！`;
+            } else if (chgYongWuxing === tiWuxing) {
+                stage3 = `變卦體用比和（${tiWuxing}同氣），終局各方歡喜、皆大歡喜，平安大吉！`;
+            } else if (wuxingRelations[chgYongWuxing].overcomes === tiWuxing) {
+                stage3 = `變卦用剋體（${chgYongWuxing}剋${tiWuxing}），終局暗藏阻難，謹防臨門一腳生變或晚節受挫！`;
+            } else if (wuxingRelations[tiWuxing].generates === chgYongWuxing) {
+                stage3 = `變卦體生用（${tiWuxing}生${chgYongWuxing}），終局精力耗竭，收穫恐不如預期，防空忙一場！`;
+            } else {
+                stage3 = `變卦體剋用（${tiWuxing}剋${chgYongWuxing}），終局憑意志與實力克難獲勝，收穫掌權！`;
+            }
 
             let finalAdvise = "";
             if (isAllTi) {
@@ -749,7 +782,7 @@
             }
 
             return {
-                isStatic: false,
+                isStatic,
                 patternTitle,
                 patternClass,
                 tags,
@@ -760,6 +793,7 @@
                 neutralParty,
                 bridgeFound,
                 greedFound,
+                bridgeStatusHtml,
                 monthEffect,
                 stage1, stage2, stage3,
                 finalAdvise
@@ -821,539 +855,4 @@
 
             const upperGuaNum = num1 % 8 === 0 ? 8 : num1 % 8;
             const lowerGuaNum = num2 % 8 === 0 ? 8 : num2 % 8;
-            const movingLine = (num1 + num2 + timeVal) % 6 === 0 ? 6 : (num1 + num2 + timeVal) % 6;
-
-            const lowerBin = plumBlossomToBinary[lowerGuaNum];
-            const upperBin = plumBlossomToBinary[upperGuaNum];
-
-            let binaryArray = [];
-            for(let i = 0; i < 3; i++) binaryArray.push((lowerBin >> i) & 1);
-            for(let i = 0; i < 3; i++) binaryArray.push((upperBin >> i) & 1);
-
-            castLines = binaryArray.map((val, index) => {
-                let isMoving = (index + 1 === movingLine);
-                if (val === 1) return isMoving ? 9 : 7;
-                else return isMoving ? 6 : 8;
-            });
-
-            currentMethodInfo = `梅花易數 (上${num1}, 下${num2}, 動${movingLine}爻)`;
-            document.getElementById('toss-history').innerHTML = 
-                `<span class="text-amber-900 font-bold fade-in px-4 py-1.5 bg-amber-100 rounded-full border border-amber-200">
-                    數字排盤：上卦(${num1})、下卦(${num2})、動在第 ${movingLine} 爻
-                </span>`;
-            
-            renderResult();
-        }
-
-        function resetDivination() {
-            castLines = [];
-            document.getElementById('result-panel').classList.add('hidden');
-            const summaryPanel = document.getElementById('wuxing-summary-panel');
-            if (summaryPanel) summaryPanel.classList.add('hidden');
-            const masterPanel = document.getElementById('master-analysis-panel');
-            if (masterPanel) masterPanel.classList.add('hidden');
-            document.getElementById('save-action-panel').classList.add('hidden');
-            document.getElementById('save-action-panel').classList.remove('flex');
-            document.getElementById('toss-history').innerHTML = '<span class="text-gray-400 text-sm">等待起卦...</span>';
-            const btnSingle = document.getElementById('btn-single');
-            if(btnSingle) {
-                btnSingle.disabled = false;
-                btnSingle.classList.remove('opacity-50', 'cursor-not-allowed');
-            }
-            document.getElementById('record-title').value = '';
-        }
-
-        function updateHistoryUI() {
-            const historyContainer = document.getElementById('toss-history');
-            if (castLines.length === 0) return;
-            const yaoSymbol = { 6: "老陰 (6) ⚏ ×", 7: "少陽 (7) ⚊", 8: "少陰 (8) ⚏", 9: "老陽 (9) ⚊ ○" };
-            let html = '';
-            castLines.forEach((val, idx) => {
-                let isMoving = (val === 6 || val === 9);
-                let colorClass = isMoving ? 'bg-red-50 text-red-700 border-red-300 font-bold' : 'bg-white text-gray-700 border-gray-200';
-                html += `<span class="${colorClass} fade-in px-2.5 py-1 text-xs rounded border shadow-sm mx-1">${yaoNames[idx]}: ${yaoSymbol[val]}</span>`;
-            });
-            historyContainer.innerHTML = html;
-        }
-
-        function calculateHexagram(linesArray, type) {
-            const binaryLines = linesArray.map(val => {
-                if (type === "orig") return (val === 7 || val === 9) ? 1 : 0;
-                else return (val === 7 || val === 6) ? 1 : 0;
-            });
-            const lowerTrigramVal = binaryLines[0] + (binaryLines[1] * 2) + (binaryLines[2] * 4);
-            const upperTrigramVal = binaryLines[3] + (binaryLines[4] * 2) + (binaryLines[5] * 4);
-            const name = hexagramMatrix[upperTrigramVal][lowerTrigramVal];
-            return { binaryArray: binaryLines, name: name, lowerVal: lowerTrigramVal, upperVal: upperTrigramVal };
-        }
-
-        function createYaoHTML(isYang, isMoving, movingSymbol, yaoIndex) {
-            let markerHtml = `<div class="yao-marker">${isMoving ? movingSymbol : ""}</div>`;
-            let barHtml = isYang 
-                ? `<div class="yao-yang"></div>`
-                : `<div class="yao-yin"><div class="yao-yin-part"></div><div class="yao-yin-part"></div></div>`;
-            
-            return `
-                <div class="yao-row fade-in">
-                    <span class="yao-title">${yaoNames[yaoIndex]}</span>
-                    ${barHtml}
-                    ${markerHtml}
-                </div>
-            `;
-        }
-
-        function onMonthChange() {
-            if (castLines.length === 6) {
-                renderResult();
-            }
-        }
-
-        function renderResult() {
-            const btnSingle = document.getElementById('btn-single');
-            if(btnSingle) {
-                btnSingle.disabled = true;
-                btnSingle.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-
-            const origHex = calculateHexagram(castLines, "orig");
-            const changedHex = calculateHexagram(castLines, "changed");
-            
-            const origBin = origHex.binaryArray;
-            const mutualBin = [origBin[1], origBin[2], origBin[3], origBin[2], origBin[3], origBin[4]];
-            const mutualLower = mutualBin[0] + (mutualBin[1] * 2) + (mutualBin[2] * 4);
-            const mutualUpper = mutualBin[3] + (mutualBin[4] * 2) + (mutualBin[5] * 4);
-            const mutualName = hexagramMatrix[mutualUpper][mutualLower];
-
-            const hasMovingLines = castLines.some(val => val === 6 || val === 9);
-            const lowerHasMoving = castLines.slice(0, 3).some(val => val === 6 || val === 9);
-            const upperHasMoving = castLines.slice(3, 6).some(val => val === 6 || val === 9);
-
-            let lowerTiYong = "", upperTiYong = "", tiPosition = null;
-            let origTiWuxing = null, origYongWuxing = null;
-            
-            if (lowerHasMoving && !upperHasMoving) {
-                tiPosition = "upper"; lowerTiYong = "[用]"; upperTiYong = "[體]";
-                origTiWuxing = trigramData[origHex.upperVal].wuxing; 
-                origYongWuxing = trigramData[origHex.lowerVal].wuxing;
-            } else if (!lowerHasMoving && upperHasMoving) {
-                tiPosition = "lower"; lowerTiYong = "[體]"; upperTiYong = "[用]";
-                origTiWuxing = trigramData[origHex.lowerVal].wuxing; 
-                origYongWuxing = trigramData[origHex.upperVal].wuxing;
-            } else if (hasMovingLines) {
-                const lowerMovingCount = castLines.slice(0, 3).filter(v => v === 6 || v === 9).length;
-                const upperMovingCount = castLines.slice(3, 6).filter(v => v === 6 || v === 9).length;
-                if (lowerMovingCount >= upperMovingCount) {
-                    tiPosition = "upper"; lowerTiYong = "[用]"; upperTiYong = "[體]";
-                    origTiWuxing = trigramData[origHex.upperVal].wuxing; origYongWuxing = trigramData[origHex.lowerVal].wuxing;
-                } else {
-                    tiPosition = "lower"; lowerTiYong = "[體]"; upperTiYong = "[用]";
-                    origTiWuxing = trigramData[origHex.lowerVal].wuxing; origYongWuxing = trigramData[origHex.upperVal].wuxing;
-                }
-            }
-
-            let mutualUpperTiYong = "", mutualLowerTiYong = "";
-            let mutualTiWuxing = null, mutualYongWuxing = null;
-            if (tiPosition === "upper") {
-                mutualUpperTiYong = "[體]"; mutualLowerTiYong = "[用]";
-                mutualTiWuxing = trigramData[mutualUpper].wuxing; 
-                mutualYongWuxing = trigramData[mutualLower].wuxing;
-            } else if (tiPosition === "lower") {
-                mutualUpperTiYong = "[用]"; mutualLowerTiYong = "[體]";
-                mutualTiWuxing = trigramData[mutualLower].wuxing; 
-                mutualYongWuxing = trigramData[mutualUpper].wuxing;
-            }
-
-            let changedUpperTiYong = "", changedLowerTiYong = "";
-            let changedTiWuxing = null, changedYongWuxing = null;
-            if (tiPosition === "upper") {
-                changedUpperTiYong = "[體]"; changedLowerTiYong = "[用]";
-                changedTiWuxing = trigramData[changedHex.upperVal].wuxing; 
-                changedYongWuxing = trigramData[changedHex.lowerVal].wuxing;
-            } else if (tiPosition === "lower") {
-                changedUpperTiYong = "[用]"; changedLowerTiYong = "[體]";
-                changedTiWuxing = trigramData[changedHex.lowerVal].wuxing; 
-                changedYongWuxing = trigramData[changedHex.upperVal].wuxing;
-            }
-
-            const currentMonthWuxing = document.getElementById('global-month').value;
-
-            const formatTiYong = (ty) => {
-                if(ty === "[體]") return `<span class="bg-red-100 text-red-700 font-bold px-2 py-0.5 rounded shadow-sm border border-red-200 text-xs">體</span>`;
-                if(ty === "[用]") return `<span class="bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded shadow-sm border border-blue-200 text-xs">用</span>`;
-                return "";
-            };
-
-            const getWuXingHtml = (upperIdx, lowerIdx, upTY, lowTY) => {
-                let up = trigramData[upperIdx]; let low = trigramData[lowerIdx];
-                let upWuxingSpan = `<span class="${wuxingColors[up.wuxing]} font-bold">${up.wuxing}</span>`;
-                let lowWuxingSpan = `<span class="${wuxingColors[low.wuxing]} font-bold">${low.wuxing}</span>`;
-                
-                const guaRel = getGuaWuxingRelation(up.wuxing, low.wuxing);
-                let relHtml = "";
-                if (guaRel) {
-                    relHtml = `
-                        <div class="mt-2 pt-2 border-t border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold text-gray-600">上下生剋：</span>
-                                <span class="text-xs font-bold px-2 py-0.5 rounded border shadow-xs ${guaRel.badgeClass}">${guaRel.tag}</span>
-                            </div>
-                            <div class="text-[11px] text-gray-500 mt-1 leading-normal text-left">${guaRel.detail}</div>
-                        </div>
-                    `;
-                }
-
-                let monthHtml = "";
-                if (currentMonthWuxing) {
-                     monthHtml = `<div class="mt-1.5 pt-1.5 border-t border-dashed border-gray-200 text-xs text-gray-500 w-full text-center">當令：<span class="${wuxingColors[currentMonthWuxing]} font-bold">${currentMonthWuxing}氣司權</span></div>`;
-                }
-
-                return `
-                    <div class="flex flex-col text-sm text-gray-700 bg-gray-50/80 p-2.5 rounded border border-gray-200 w-full">
-                        <div class="flex justify-between items-center mb-1">
-                            <span>上卦：${up.name} <span class="text-gray-300 mx-1">|</span> ${upWuxingSpan}</span> ${formatTiYong(upTY)}
-                        </div>
-                        <div class="flex justify-between items-center">
-                            <span>下卦：${low.name} <span class="text-gray-300 mx-1">|</span> ${lowWuxingSpan}</span> ${formatTiYong(lowTY)}
-                        </div>
-                        ${relHtml}
-                        ${monthHtml}
-                    </div>
-                `;
-            };
-
-            const renderTiYongUI = (elementId, tiW, yongW) => {
-                const el = document.getElementById(elementId);
-                const info = getTiYongRelation(tiW, yongW);
-                if (info) {
-                    const strengthText = getTiStrength(currentMonthWuxing, tiW);
-                    el.className = `text-xs font-bold mt-2 px-2 py-1.5 rounded w-full text-center shadow-sm ${info.style}`;
-                    el.innerText = info.text + strengthText;
-                    el.classList.remove('hidden');
-                } else { 
-                    el.classList.add('hidden'); 
-                }
-            };
-
-            document.getElementById('orig-hex-name').innerText = origHex.name;
-            document.getElementById('orig-wuxing').innerHTML = getWuXingHtml(origHex.upperVal, origHex.lowerVal, upperTiYong, lowerTiYong);
-            renderTiYongUI('ti-yong-relation', origTiWuxing, origYongWuxing);
-            document.getElementById('orig-desc').innerText = hexagramDesc[origHex.name] || "查無卦辭。";
-
-            document.getElementById('mutual-hex-name').innerText = mutualName;
-            document.getElementById('mutual-wuxing').innerHTML = getWuXingHtml(mutualUpper, mutualLower, mutualUpperTiYong, mutualLowerTiYong);
-            renderTiYongUI('mutual-ti-yong-relation', mutualTiWuxing, mutualYongWuxing);
-            document.getElementById('mutual-desc').innerText = hexagramDesc[mutualName] || "查無卦辭。";
-
-            const changedContainer = document.getElementById('changed-lines');
-            if (hasMovingLines) {
-                document.getElementById('changed-hex-name').innerText = changedHex.name;
-                document.getElementById('changed-wuxing').innerHTML = getWuXingHtml(changedHex.upperVal, changedHex.lowerVal, changedUpperTiYong, changedLowerTiYong);
-                renderTiYongUI('changed-ti-yong-relation', changedTiWuxing, changedYongWuxing);
-                document.getElementById('changed-desc').innerText = hexagramDesc[changedHex.name] || "查無卦辭。";
-                
-                changedContainer.innerHTML = '';
-                for (let i = 0; i < 6; i++) {
-                    changedContainer.innerHTML += createYaoHTML(changedHex.binaryArray[i] === 1, false, "", i);
-                }
-            } else {
-                document.getElementById('changed-hex-name').innerText = "靜卦 (無變)";
-                document.getElementById('changed-wuxing').innerHTML = `<div class="text-xs text-gray-400 mt-2 p-2 text-center bg-gray-50 rounded border border-gray-200 w-full">六爻皆靜，專看本卦卦辭與彖象。</div>`;
-                document.getElementById('changed-ti-yong-relation').classList.add('hidden');
-                document.getElementById('changed-desc').innerText = "本卦純靜無變爻，以本卦卦辭斷其吉凶。";
-                changedContainer.innerHTML = `<div class="h-44 flex items-center justify-center text-xs text-gray-400">--- 無動爻變動 ---</div>`;
-            }
-
-            const origContainer = document.getElementById('orig-lines');
-            const mutualContainer = document.getElementById('mutual-lines');
-            origContainer.innerHTML = '';
-            mutualContainer.innerHTML = '';
-
-            for (let i = 0; i < 6; i++) {
-                const val = castLines[i];
-                const isMoving = (val === 6 || val === 9);
-                origContainer.innerHTML += createYaoHTML(origHex.binaryArray[i] === 1, isMoving, isMoving ? "🔴" : "", i);
-                mutualContainer.innerHTML += createYaoHTML(mutualBin[i] === 1, false, "", i);
-            }
-
-            document.getElementById('result-panel').classList.remove('hidden');
-            document.getElementById('save-action-panel').classList.remove('hidden');
-            document.getElementById('save-action-panel').classList.add('flex');
-
-            // 執行梅花易數 體.用.月令.三卦 綜合大成斷法
-            const comprehensive = evaluateComprehensiveDivination({
-                origHex, mutualHex, changedHex,
-                hasMovingLines, tiPosition,
-                origUpperWuxing: trigramData[origHex.upperVal].wuxing,
-                origLowerWuxing: trigramData[origHex.lowerVal].wuxing,
-                mutualUpperWuxing: trigramData[mutualUpper].wuxing,
-                mutualLowerWuxing: trigramData[mutualLower].wuxing,
-                changedUpperWuxing: trigramData[changedHex.upperVal].wuxing,
-                changedLowerWuxing: trigramData[changedHex.lowerVal].wuxing,
-                monthWuxing: currentMonthWuxing
-            });
-
-            const masterPanel = document.getElementById('master-analysis-panel');
-            if (masterPanel) {
-                document.getElementById('master-pattern-badge').innerText = comprehensive.patternTitle;
-                document.getElementById('master-pattern-badge').className = `px-4 py-1.5 rounded-lg border-2 font-bold text-sm md:text-base tracking-wider shadow-xs ${comprehensive.patternClass}`;
-
-                document.getElementById('master-ti-percent').innerText = `${comprehensive.tiPercent}%`;
-                document.getElementById('master-yong-percent').innerText = `${comprehensive.yongPercent}%`;
-                document.getElementById('master-ti-bar').style.width = `${comprehensive.tiPercent}%`;
-                document.getElementById('master-yong-bar').style.width = `${comprehensive.yongPercent}%`;
-
-                const tagsContainer = document.getElementById('master-tags-container');
-                tagsContainer.innerHTML = comprehensive.tags.map(t => `<span class="px-2.5 py-1 text-xs font-bold bg-amber-100/90 text-amber-900 border border-amber-300 rounded-full shadow-2xs">${t}</span>`).join('');
-
-                document.getElementById('master-stage-1').innerText = comprehensive.stage1;
-                document.getElementById('master-stage-2').innerText = comprehensive.stage2;
-                document.getElementById('master-stage-3').innerText = comprehensive.stage3;
-
-                const tiCountEl = document.getElementById('master-ti-count');
-                const tiListEl = document.getElementById('master-ti-list');
-                tiCountEl.innerText = `${comprehensive.tiParty.length} 卦助體`;
-                tiListEl.innerHTML = comprehensive.tiParty.length > 0 
-                    ? comprehensive.tiParty.map(p => `<div>• ${p.desc}</div>`).join('') 
-                    : '<div class="text-gray-400 italic">無生扶卦象</div>';
-
-                const yongCountEl = document.getElementById('master-yong-count');
-                const yongListEl = document.getElementById('master-yong-list');
-                yongCountEl.innerText = `${comprehensive.yongParty.length} 卦剋洩`;
-                yongListEl.innerHTML = comprehensive.yongParty.length > 0 
-                    ? comprehensive.yongParty.map(p => `<div>• ${p.desc}</div>`).join('') 
-                    : '<div class="text-emerald-700 font-medium">★ 局中無剋洩煞氣 (純吉)</div>';
-
-                document.getElementById('master-final-advise').innerText = comprehensive.finalAdvise;
-                document.getElementById('master-month-effect').innerText = comprehensive.monthEffect;
-
-                masterPanel.classList.remove('hidden');
-            }
-
-            // 更新五行月令得氣速查卡
-            const summaryPanel = document.getElementById('wuxing-summary-panel');
-            if (summaryPanel) {
-                const monthNameEl = document.getElementById('wuxing-month-name');
-                const monthDetailEl = document.getElementById('wuxing-month-detail');
-
-                const monthTable = {
-                    "木": [
-                        { status: "旺 (當令同我)", element: "木", note: "氣盛得令，最吉", color: "text-emerald-700 font-bold" },
-                        { status: "相 (我生者相)", element: "火", note: "生氣蓬勃，次吉", color: "text-red-600 font-bold" },
-                        { status: "休 (生我者休)", element: "水", note: "功成退居，平安", color: "text-blue-600 font-bold" },
-                        { status: "囚 (剋我者囚)", element: "金", note: "受氣衰微，無力", color: "text-amber-600 font-bold" },
-                        { status: "死 (我剋者死)", element: "土", note: "洩氣至極，不宜", color: "text-amber-800 font-bold" }
-                    ],
-                    "火": [
-                        { status: "旺 (當令同我)", element: "火", note: "炎上當權，最吉", color: "text-red-600 font-bold" },
-                        { status: "相 (我生者相)", element: "土", note: "生氣流轉，次吉", color: "text-amber-700 font-bold" },
-                        { status: "休 (生我者休)", element: "木", note: "母退子健，平安", color: "text-emerald-700 font-bold" },
-                        { status: "囚 (剋我者囚)", element: "水", note: "受制退避，力弱", color: "text-blue-600 font-bold" },
-                        { status: "死 (我剋者死)", element: "金", note: "受消無力，不宜", color: "text-amber-600 font-bold" }
-                    ],
-                    "土": [
-                        { status: "旺 (當令同我)", element: "土", note: "厚載萬物，最吉", color: "text-amber-700 font-bold" },
-                        { status: "相 (我生者相)", element: "金", note: "土旺生金，次吉", color: "text-amber-600 font-bold" },
-                        { status: "休 (生我者休)", element: "火", note: "功成退藏，平安", color: "text-red-600 font-bold" },
-                        { status: "囚 (剋我者囚)", element: "木", note: "木折土重，受困", color: "text-emerald-700 font-bold" },
-                        { status: "死 (我剋者死)", element: "水", note: "土克水涸，無氣", color: "text-blue-600 font-bold" }
-                    ],
-                    "金": [
-                        { status: "旺 (當令同我)", element: "金", note: "剛健肅殺，最吉", color: "text-amber-600 font-bold" },
-                        { status: "相 (我生者相)", element: "水", note: "金水相生，次吉", color: "text-blue-600 font-bold" },
-                        { status: "休 (生我者休)", element: "土", note: "退養休歇，平安", color: "text-amber-700 font-bold" },
-                        { status: "囚 (剋我者囚)", element: "火", note: "炎火受伏，休囚", color: "text-red-600 font-bold" },
-                        { status: "死 (我剋者死)", element: "木", note: "金伐草木，衰死", color: "text-emerald-700 font-bold" }
-                    ],
-                    "水": [
-                        { status: "旺 (當令同我)", element: "水", note: "潤下得勢，最吉", color: "text-blue-600 font-bold" },
-                        { status: "相 (我生者相)", element: "木", note: "水木清華，次吉", color: "text-emerald-700 font-bold" },
-                        { status: "休 (生我者休)", element: "金", note: "母氣歸藏，平安", color: "text-amber-600 font-bold" },
-                        { status: "囚 (剋我者囚)", element: "土", note: "水漫土崩，囚禁", color: "text-amber-700 font-bold" },
-                        { status: "死 (我剋者死)", element: "火", note: "水火相激，消滅", color: "text-red-600 font-bold" }
-                    ]
-                };
-
-                if (currentMonthWuxing && monthTable[currentMonthWuxing]) {
-                    monthNameEl.innerText = `${currentMonthWuxing}月當令`;
-                    monthDetailEl.innerHTML = monthTable[currentMonthWuxing].map(item => `
-                        <div class="flex justify-between items-center text-xs py-0.5 border-b border-gray-100 last:border-0">
-                            <span><span class="${item.color}">${item.element}</span> ：${item.status}</span>
-                            <span class="text-gray-400 text-[11px]">${item.note}</span>
-                        </div>
-                    `).join('');
-                } else {
-                    monthNameEl.innerText = "未指定月令";
-                    monthDetailEl.innerHTML = `<div class="text-xs text-gray-400 py-1">可於上方選單指定占卜月份（春木、夏火、四季土、秋金、冬水），以對照五行當令旺衰吉凶。</div>`;
-                }
-
-                summaryPanel.classList.remove('hidden');
-            }
-        }
-
-        function getStoredRecords() {
-            try {
-                return JSON.parse(localStorage.getItem('yijing_records_v3') || '[]');
-            } catch(e) {
-                return [];
-            }
-        }
-
-        function setStoredRecords(records) {
-            localStorage.setItem('yijing_records_v3', JSON.stringify(records));
-            updateRecordBadge();
-        }
-
-        function updateRecordBadge() {
-            const count = getStoredRecords().length;
-            const badge = document.getElementById('record-count');
-            if(badge) badge.innerText = count;
-        }
-
-        function saveCurrentRecord() {
-            if (castLines.length !== 6) {
-                alert("尚未完成排盤，無法儲存！");
-                return;
-            }
-            const titleInput = document.getElementById('record-title');
-            const title = titleInput.value.trim() || "未命名卦象";
-            const currentMonth = document.getElementById('global-month').value;
-
-            const record = {
-                id: Date.now(),
-                title: title,
-                lines: [...castLines],
-                month: currentMonth,
-                method: currentMethodInfo,
-                createdAt: new Date().toISOString()
-            };
-
-            const records = getStoredRecords();
-            records.unshift(record);
-            setStoredRecords(records);
-
-            alert(`✅ 儲存成功！已記錄「${title}」`);
-            titleInput.value = "";
-            document.getElementById('save-action-panel').classList.add('hidden');
-            document.getElementById('save-action-panel').classList.remove('flex');
-        }
-
-        function loadRecordsList() {
-            const container = document.getElementById('records-list');
-            if (!container) return;
-            const records = getStoredRecords();
-            updateRecordBadge();
-
-            if (records.length === 0) {
-                container.innerHTML = '<p class="text-gray-500 text-sm text-center py-6">目前尚無儲存的卦象紀錄。</p>';
-                return;
-            }
-
-            container.innerHTML = records.map(r => {
-                const orig = calculateHexagram(r.lines, "orig");
-                const hasMoving = r.lines.some(v => v === 6 || v === 9);
-                const changed = hasMoving ? calculateHexagram(r.lines, "changed").name : "靜卦";
-                const dateStr = new Date(r.createdAt || r.id).toLocaleString('zh-TW', { hour12: false });
-
-                return `
-                <div class="flex flex-col md:flex-row justify-between items-center bg-white p-3.5 rounded-lg border border-gray-200 shadow-sm gap-3 hover:border-amber-400 transition">
-                    <div class="flex-1 w-full">
-                        <div class="font-bold text-amber-900 text-base flex items-center flex-wrap gap-2">
-                            <span>☯ ${r.title}</span>
-                            <span class="bg-amber-100 text-amber-800 text-xs px-2 py-0.5 rounded border border-amber-200">
-                                ${orig.name} 之 ${changed}
-                            </span>
-                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded">
-                                ${r.method || '排盤'} ${r.month ? '| 月令:' + r.month : ''}
-                            </span>
-                        </div>
-                        <div class="text-xs text-gray-400 mt-1">${dateStr}</div>
-                    </div>
-                    <div class="flex gap-2 shrink-0">
-                        <button onclick="restoreRecord(${r.id})" class="px-3 py-1 bg-amber-50 text-amber-800 border border-amber-300 rounded text-xs hover:bg-amber-100 transition shadow-sm font-semibold">打開排盤</button>
-                        <button onclick="deleteRecordItem(${r.id})" class="px-3 py-1 bg-red-50 text-red-700 border border-red-200 rounded text-xs hover:bg-red-100 transition shadow-sm">刪除</button>
-                    </div>
-                </div>`;
-            }).join('');
-        }
-
-        function restoreRecord(id) {
-            const records = getStoredRecords();
-            const record = records.find(r => r.id === id);
-            if (!record) return;
-
-            castLines = [...record.lines];
-            currentMethodInfo = record.method || "載入紀錄";
-            if (record.month) {
-                document.getElementById('global-month').value = record.month;
-            }
-
-            switchTab('coin');
-            updateHistoryUI();
-            renderResult();
-
-            document.getElementById('toss-history').innerHTML = 
-                `<span class="text-amber-900 font-bold px-4 py-1.5 bg-amber-100 rounded-full border border-amber-200 text-sm">
-                    📜 載入歷史紀錄：${record.title}
-                </span>`;
-            document.getElementById('save-action-panel').classList.add('hidden');
-            document.getElementById('save-action-panel').classList.remove('flex');
-        }
-
-        function deleteRecordItem(id) {
-            if (!confirm("確定要刪除這筆排盤紀錄嗎？")) return;
-            const records = getStoredRecords().filter(r => r.id !== id);
-            setStoredRecords(records);
-            loadRecordsList();
-        }
-
-        function clearAllRecords() {
-            if (!confirm("⚠️ 警告：這將徹底清除所有儲存的卦象紀錄，確定要清空嗎？")) return;
-            setStoredRecords([]);
-            loadRecordsList();
-        }
-
-        function exportRecordsJson() {
-            const records = getStoredRecords();
-            if (records.length === 0) {
-                alert("目前尚無任何紀錄可匯出！");
-                return;
-            }
-            const blob = new Blob([JSON.stringify(records, null, 2)], { type: "application/json" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = `易爻排盤紀錄備份_${new Date().toISOString().slice(0, 10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function importRecordsFile(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = JSON.parse(e.target.result);
-                    if (Array.isArray(data)) {
-                        const existing = getStoredRecords();
-                        const merged = [...data, ...existing];
-                        const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
-                        setStoredRecords(unique);
-                        alert(`✅ 成功匯入！目前共有 ${unique.length} 筆紀錄。`);
-                        loadRecordsList();
-                    } else {
-                        alert("❌ 匯入失敗：檔案格式不符合規範！");
-                    }
-                } catch(err) {
-                    alert("❌ 檔案解析失敗，請確認是否為合法的 JSON 檔案。");
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = "";
-        }
-
-        updateRecordBadge();
-        resetDivination();
-    </script>
-</body>
-</html>
+            const movingLine = (
