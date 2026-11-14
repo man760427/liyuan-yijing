@@ -480,7 +480,7 @@
         let currentMethodInfo = "";
 
         function getTiStrength(monthWuxing, tiWuxing) {
-            if (!monthWuxing || !tiWuxing) return "";
+            if (!monthWuxing || !tiWuxing || !wuxingRelations[monthWuxing] || !wuxingRelations[tiWuxing]) return "";
             if (monthWuxing === tiWuxing) return " 【體氣：旺 (同氣大吉)】";
             if (wuxingRelations[monthWuxing].generates === tiWuxing) return " 【體氣：相 (月令生體 次吉)】";
             if (wuxingRelations[tiWuxing].generates === monthWuxing) return " 【體氣：休 (體生月令 洩氣)】";
@@ -491,7 +491,7 @@
 
         // 上下卦五行生剋關係判定
         function getGuaWuxingRelation(upWuxing, lowWuxing) {
-            if (!upWuxing || !lowWuxing) return null;
+            if (!upWuxing || !lowWuxing || !wuxingRelations[upWuxing] || !wuxingRelations[lowWuxing]) return null;
             if (upWuxing === lowWuxing) {
                 return {
                     tag: `上下比和 (${upWuxing}${lowWuxing})`,
@@ -536,7 +536,7 @@
         }
 
         function getTiYongRelation(ti, yong) {
-            if (!ti || !yong) return null;
+            if (!ti || !yong || !wuxingRelations[ti] || !wuxingRelations[yong]) return null;
             if (ti === yong) return { text: "體用比和 (吉：同心協力)", style: "bg-blue-50 text-blue-800 border border-blue-200" };
             if (wuxingRelations[yong].generates === ti) return { text: "用生體 (大吉：得外力相助)", style: "bg-emerald-50 text-emerald-800 border border-emerald-200" };
             if (wuxingRelations[ti].generates === yong) return { text: "體生用 (凶：勞碌洩氣)", style: "bg-orange-50 text-orange-800 border border-orange-200" };
@@ -973,6 +973,12 @@
             const mutualLower = mutualBin[0] + (mutualBin[1] * 2) + (mutualBin[2] * 4);
             const mutualUpper = mutualBin[3] + (mutualBin[4] * 2) + (mutualBin[5] * 4);
             const mutualName = hexagramMatrix[mutualUpper][mutualLower];
+            const mutualHex = {
+                name: mutualName,
+                lowerVal: mutualLower,
+                upperVal: mutualUpper,
+                binaryArray: mutualBin
+            };
 
             const hasMovingLines = castLines.some(val => val === 6 || val === 9);
             const lowerHasMoving = castLines.slice(0, 3).some(val => val === 6 || val === 9);
@@ -1183,7 +1189,9 @@
 
                 // 自動平滑滾動至大成總斷面板，確保使用者不用翻找直接映入眼簾
                 setTimeout(() => {
-                    masterPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (masterPanel && typeof masterPanel.scrollIntoView === 'function') {
+                        masterPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
                 }, 200);
             }
 
