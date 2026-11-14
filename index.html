@@ -1256,18 +1256,47 @@
                 let upWuxingSpan = `<span class="${wuxingColors[up.wuxing]} font-bold">${up.yyWuxing}</span> <span class="text-[10px] px-1.5 py-0.5 rounded border ${upYYBg} font-medium">${upYYIcon} ${up.yyTrait}</span>`;
                 let lowWuxingSpan = `<span class="${wuxingColors[low.wuxing]} font-bold">${low.yyWuxing}</span> <span class="text-[10px] px-1.5 py-0.5 rounded border ${lowYYBg} font-medium">${lowYYIcon} ${low.yyTrait}</span>`;
                 
-                const guaRel = getGuaWuxingRelation(up.wuxing, low.wuxing);
+                let tiObj = null, yongObj = null;
+                if (upTY === "[體]" && lowTY === "[用]") { tiObj = up; yongObj = low; }
+                else if (lowTY === "[體]" && upTY === "[用]") { tiObj = low; yongObj = up; }
+
                 let relHtml = "";
-                if (guaRel) {
-                    relHtml = `
-                        <div class="mt-2 pt-2 border-t border-gray-200">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold text-gray-600">上下生剋：</span>
-                                <span class="text-xs font-bold px-2 py-0.5 rounded border shadow-xs ${guaRel.badgeClass}">${guaRel.tag}</span>
+                if (tiObj && yongObj) {
+                    const tyRel = getTiYongRelation(tiObj.wuxing, yongObj.wuxing);
+                    if (tyRel) {
+                        let shortTag = tyRel.text.split(" ")[0];
+                        let detailDesc = tyRel.text;
+                        if (tiObj.wuxing === yongObj.wuxing) detailDesc = `${tiObj.yyWuxing}與${yongObj.yyWuxing}同氣比和，內外和順、同心協力之吉象。`;
+                        else if (wuxingRelations[yongObj.wuxing].generates === tiObj.wuxing) detailDesc = `用(${yongObj.yyWuxing})生體(${tiObj.yyWuxing})，得外力相助、貴人提攜之大吉。`;
+                        else if (wuxingRelations[tiObj.wuxing].generates === yongObj.wuxing) detailDesc = `體(${tiObj.yyWuxing})生用(${yongObj.yyWuxing})，自身付出勞碌、洩氣耗神之象。`;
+                        else if (wuxingRelations[tiObj.wuxing].overcomes === yongObj.wuxing) detailDesc = `體(${tiObj.yyWuxing})剋用(${yongObj.yyWuxing})，我方掌握主導權，辛勞有成。`;
+                        else if (wuxingRelations[yongObj.wuxing].overcomes === tiObj.wuxing) detailDesc = `用(${yongObj.yyWuxing})剋體(${tiObj.yyWuxing})，受外在壓力與阻力制約，宜防風險。`;
+
+                        relHtml = `
+                            <div class="mt-2 pt-2 border-t border-gray-200">
+                                <div class="flex items-center justify-between gap-1 flex-wrap">
+                                    <span class="text-xs font-bold text-gray-600">體用生剋：</span>
+                                    <span class="text-xs font-bold px-2 py-0.5 rounded shadow-xs ${tyRel.style}">${shortTag}</span>
+                                </div>
+                                <div class="text-[11px] text-gray-500 mt-1 leading-normal text-left">${detailDesc}</div>
                             </div>
-                            <div class="text-[11px] text-gray-500 mt-1 leading-normal text-left">${guaRel.detail}</div>
-                        </div>
-                    `;
+                        `;
+                    }
+                } else {
+                    // 純靜卦無動爻：依貞悔原則，下卦為體(貞)、上卦為用(悔)
+                    const tyRel = getTiYongRelation(low.wuxing, up.wuxing);
+                    if (tyRel) {
+                        let shortTag = tyRel.text.split(" ")[0];
+                        relHtml = `
+                            <div class="mt-2 pt-2 border-t border-gray-200">
+                                <div class="flex items-center justify-between gap-1 flex-wrap">
+                                    <span class="text-xs font-bold text-gray-600">體用生剋(下體上用)：</span>
+                                    <span class="text-xs font-bold px-2 py-0.5 rounded shadow-xs ${tyRel.style}">${shortTag}</span>
+                                </div>
+                                <div class="text-[11px] text-gray-500 mt-1 leading-normal text-left">${tyRel.text}</div>
+                            </div>
+                        `;
+                    }
                 }
 
                 const yyCompare = getYinYangStrengthCompare(up, low, upTY, lowTY);
