@@ -565,9 +565,56 @@
         };
 
         const trigramData = [
-            { name: "坤", wuxing: "土" }, { name: "震", wuxing: "木" }, { name: "坎", wuxing: "水" }, { name: "兌", wuxing: "金" },
-            { name: "艮", wuxing: "土" }, { name: "離", wuxing: "火" }, { name: "巽", wuxing: "木" }, { name: "乾", wuxing: "金" }
+            { name: "坤", wuxing: "土", yinyang: "陰", yyWuxing: "陰土", yyTrait: "柔順包容" },
+            { name: "震", wuxing: "木", yinyang: "陽", yyWuxing: "陽木", yyTrait: "剛動奮發" },
+            { name: "坎", wuxing: "水", yinyang: "陽", yyWuxing: "陽水", yyTrait: "險陷奔流" },
+            { name: "兌", wuxing: "金", yinyang: "陰", yyWuxing: "陰金", yyTrait: "柔悅敏銳" },
+            { name: "艮", wuxing: "土", yinyang: "陽", yyWuxing: "陽土", yyTrait: "剛止穩重" },
+            { name: "離", wuxing: "火", yinyang: "陰", yyWuxing: "陰火", yyTrait: "明麗依附" },
+            { name: "巽", wuxing: "木", yinyang: "陰", yyWuxing: "陰木", yyTrait: "柔順滲透" },
+            { name: "乾", wuxing: "金", yinyang: "陽", yyWuxing: "陽金", yyTrait: "剛健峻拔" }
         ];
+
+        function getYinYangStrengthCompare(up, low, upTY, lowTY) {
+            const upIsYang = up.yinyang === "陽";
+            const lowIsYang = low.yinyang === "陽";
+            let tag = "", badgeClass = "", detail = "";
+
+            let tiGua = null, yongGua = null;
+            if (upTY === "[體]" && lowTY === "[用]") { tiGua = up; yongGua = low; }
+            else if (lowTY === "[體]" && upTY === "[用]") { tiGua = low; yongGua = up; }
+
+            if (upIsYang && lowIsYang) {
+                tag = `☀️ 雙陽並強 (${up.yyWuxing}＋${low.yyWuxing})`;
+                badgeClass = "bg-amber-100 text-amber-900 border-amber-300";
+                detail = "上下皆陽卦，氣勢剛猛外顯、節奏快速果決，宜防過剛易折。";
+            } else if (!upIsYang && !lowIsYang) {
+                tag = `🌙 雙陰沉潛 (${up.yyWuxing}＋${low.yyWuxing})`;
+                badgeClass = "bg-slate-100 text-slate-700 border-slate-300";
+                detail = "上下皆陰卦，氣勢柔和內斂、暗中醞釀，宜沉穩守成、靜觀其變。";
+            } else if (tiGua && yongGua) {
+                if (tiGua.yinyang === "陽" && yongGua.yinyang === "陰") {
+                    tag = `⚖️ 體陽用陰 (體勢較強)`;
+                    badgeClass = "bg-emerald-50 text-emerald-800 border-emerald-200";
+                    detail = `體為${tiGua.yyWuxing}（剛強主動），用為${yongGua.yyWuxing}（柔順從之），我方氣勢與主導力佔優。`;
+                } else {
+                    tag = `⚖️ 體陰用陽 (用勢較猛)`;
+                    badgeClass = "bg-orange-50 text-orange-800 border-orange-200";
+                    detail = `體為${tiGua.yyWuxing}（內斂柔順），用為${yongGua.yyWuxing}（外力剛猛），對方氣勢較強，宜以柔克剛、借力使力。`;
+                }
+            } else {
+                if (upIsYang) {
+                    tag = `🌗 外陽內陰 (${up.yyWuxing}強 / ${low.yyWuxing}柔)`;
+                    badgeClass = "bg-sky-50 text-sky-800 border-sky-200";
+                    detail = "外剛內柔之象，外部氣勢較強顯，內在宜保持沉穩柔和。";
+                } else {
+                    tag = `🌗 外陰內陽 (${up.yyWuxing}柔 / ${low.yyWuxing}強)`;
+                    badgeClass = "bg-indigo-50 text-indigo-800 border-indigo-200";
+                    detail = "外柔內剛之象，內心主見堅定強盛，外在表現溫和圓融。";
+                }
+            }
+            return { tag, badgeClass, detail };
+        }
 
         const wuxingRelations = {
             "金": { generates: "水", overcomes: "木" }, "木": { generates: "火", overcomes: "土" },
@@ -692,6 +739,23 @@
 
             let tiScore = 0;
             let yongScore = 0;
+
+            // 陰陽強弱微調（陽卦剛強外顯 +5，並統計全局陰陽比重）
+            let yangCount = 0, yinCount = 0;
+            const allTrigramIdxs = [
+                origHex?.upperVal, origHex?.lowerVal,
+                mutualHex?.upperVal, mutualHex?.lowerVal,
+                changedHex?.upperVal, changedHex?.lowerVal
+            ].filter(idx => idx !== undefined && trigramData[idx]);
+            allTrigramIdxs.forEach(idx => {
+                if (trigramData[idx].yinyang === "陽") yangCount++;
+                else yinCount++;
+            });
+            const tiTrigramIdx = (actualTiPos === "upper") ? origHex?.upperVal : origHex?.lowerVal;
+            const tiGuaObj = (tiTrigramIdx !== undefined) ? trigramData[tiTrigramIdx] : null;
+            if (tiGuaObj && tiGuaObj.yinyang === "陽") {
+                tiScore += 5;
+            }
 
             fieldGuaList.forEach(g => {
                 const w = g.wuxing;
@@ -824,6 +888,12 @@
                 patternClass = "border-sky-700 text-sky-900 bg-sky-50";
                 tags.push("體用均勢", "互有牽制", "中平持重");
                 if (!canFormParty) tags.push(`${tiWuxing}卦不論黨多`);
+            }
+
+            if (allTrigramIdxs.length > 0) {
+                if (yangCount >= 4) tags.push(`☀️ 陽盛剛強 (${yangCount}陽${yinCount}陰)`);
+                else if (yinCount >= 4) tags.push(`🌙 陰盛沉潛 (${yangCount}陽${yinCount}陰)`);
+                else tags.push(`🌗 陰陽相濟 (${yangCount}陽${yinCount}陰)`);
             }
 
             // 生成專屬通關搭橋看板 HTML
@@ -1178,8 +1248,13 @@
 
             const getWuXingHtml = (upperIdx, lowerIdx, upTY, lowTY) => {
                 let up = trigramData[upperIdx]; let low = trigramData[lowerIdx];
-                let upWuxingSpan = `<span class="${wuxingColors[up.wuxing]} font-bold">${up.wuxing}</span>`;
-                let lowWuxingSpan = `<span class="${wuxingColors[low.wuxing]} font-bold">${low.wuxing}</span>`;
+                let upYYIcon = up.yinyang === "陽" ? "☀️" : "🌙";
+                let lowYYIcon = low.yinyang === "陽" ? "☀️" : "🌙";
+                let upYYBg = up.yinyang === "陽" ? "bg-amber-100/90 text-amber-950 border-amber-300" : "bg-slate-100 text-slate-700 border-slate-300";
+                let lowYYBg = low.yinyang === "陽" ? "bg-amber-100/90 text-amber-950 border-amber-300" : "bg-slate-100 text-slate-700 border-slate-300";
+
+                let upWuxingSpan = `<span class="${wuxingColors[up.wuxing]} font-bold">${up.yyWuxing}</span> <span class="text-[10px] px-1.5 py-0.5 rounded border ${upYYBg} font-medium">${upYYIcon} ${up.yyTrait}</span>`;
+                let lowWuxingSpan = `<span class="${wuxingColors[low.wuxing]} font-bold">${low.yyWuxing}</span> <span class="text-[10px] px-1.5 py-0.5 rounded border ${lowYYBg} font-medium">${lowYYIcon} ${low.yyTrait}</span>`;
                 
                 const guaRel = getGuaWuxingRelation(up.wuxing, low.wuxing);
                 let relHtml = "";
@@ -1195,6 +1270,17 @@
                     `;
                 }
 
+                const yyCompare = getYinYangStrengthCompare(up, low, upTY, lowTY);
+                const yyHtml = `
+                    <div class="mt-2 pt-2 border-t border-gray-200">
+                        <div class="flex items-center justify-between gap-1 flex-wrap">
+                            <span class="text-xs font-bold text-gray-600">陰陽強弱：</span>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded border shadow-xs ${yyCompare.badgeClass}">${yyCompare.tag}</span>
+                        </div>
+                        <div class="text-[11px] text-gray-500 mt-1 leading-normal text-left">${yyCompare.detail}</div>
+                    </div>
+                `;
+
                 let monthHtml = "";
                 if (currentMonthWuxing) {
                      monthHtml = `<div class="mt-1.5 pt-1.5 border-t border-dashed border-gray-200 text-xs text-gray-500 w-full text-center">當令：<span class="${wuxingColors[currentMonthWuxing]} font-bold">${currentMonthWuxing}氣司權</span></div>`;
@@ -1202,13 +1288,14 @@
 
                 return `
                     <div class="flex flex-col text-sm text-gray-700 bg-gray-50/80 p-2.5 rounded border border-gray-200 w-full">
-                        <div class="flex justify-between items-center mb-1">
-                            <span>上卦：${up.name} <span class="text-gray-300 mx-1">|</span> ${upWuxingSpan}</span> ${formatTiYong(upTY)}
+                        <div class="flex justify-between items-center mb-1 gap-1 flex-wrap">
+                            <span>上卦：${up.name} <span class="text-gray-300 mx-0.5">|</span> ${upWuxingSpan}</span> ${formatTiYong(upTY)}
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span>下卦：${low.name} <span class="text-gray-300 mx-1">|</span> ${lowWuxingSpan}</span> ${formatTiYong(lowTY)}
+                        <div class="flex justify-between items-center gap-1 flex-wrap">
+                            <span>下卦：${low.name} <span class="text-gray-300 mx-0.5">|</span> ${lowWuxingSpan}</span> ${formatTiYong(lowTY)}
                         </div>
                         ${relHtml}
+                        ${yyHtml}
                         ${monthHtml}
                     </div>
                 `;
