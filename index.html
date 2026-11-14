@@ -753,7 +753,8 @@
                 }
             }
 
-            // 特殊格局判定
+            // 特殊格局判定（依規則：僅【金、土】二行才論「體黨多 / 用黨多」，木、火、水不論黨多）
+            const canFormParty = (tiWuxing === "金" || tiWuxing === "土");
             const isAllTi = (yongParty.length === 0 && tiParty.length >= 2);
             const isAllYong = (tiParty.length === 0 && yongParty.length >= 2);
 
@@ -784,18 +785,27 @@
                 tags.push("貪生忘剋", `${greedFound.attacker}貪生${greedFound.child}`, "煞氣消解", "平順少阻");
                 yongScore = Math.max(15, yongScore - 25);
                 tiScore += 20;
-            } else if (tiScore >= yongScore + 25) {
+            } else if (canFormParty && tiScore >= yongScore + 25) {
                 patternTitle = "【體黨勢盛 ‧ 根基雄厚問事皆吉】";
                 patternClass = "border-emerald-700 text-emerald-900 bg-emerald-50";
                 tags.push("體黨多", "體勢盛", "問事皆吉", "貴人拱衛");
-            } else if (yongScore >= tiScore + 25) {
+            } else if (canFormParty && yongScore >= tiScore + 25) {
                 patternTitle = "【用黨猖獗 ‧ 體勢孤衰問事皆凶】";
                 patternClass = "border-red-700 text-red-900 bg-red-50";
                 tags.push("用黨多", "體勢衰", "問事皆凶", "慎防破敗");
+            } else if (!canFormParty && tiScore >= yongScore + 25) {
+                patternTitle = "【生扶得助 ‧ 外力相生諸事順遂】";
+                patternClass = "border-emerald-700 text-emerald-900 bg-emerald-50";
+                tags.push("生扶得助", "順遂吉象", `${tiWuxing}卦不論黨多`);
+            } else if (!canFormParty && yongScore >= tiScore + 25) {
+                patternTitle = "【剋洩偏重 ‧ 宜防阻礙謹慎應對】";
+                patternClass = "border-red-700 text-red-900 bg-red-50";
+                tags.push("剋洩偏重", "謹慎守成", `${tiWuxing}卦不論黨多`);
             } else {
                 patternTitle = "【體用均平 ‧ 勢均力敵謀定後動】";
                 patternClass = "border-sky-700 text-sky-900 bg-sky-50";
                 tags.push("體用均勢", "互有牽制", "中平持重");
+                if (!canFormParty) tags.push(`${tiWuxing}卦不論黨多`);
             }
 
             // 生成專屬通關搭橋看板 HTML
@@ -879,10 +889,14 @@
                 finalAdvise = `【通關化煞訣】：卦中雖逢剋害，但妙得【${bridgeFound.bridge}】氣搭橋通關！凡事切忌硬碰硬，應主動尋找屬【${bridgeFound.bridge}】之貴人（如仲介、法律、長輩或協調者）居中斡旋，必能轉危為安、反敗為勝！`;
             } else if (greedFound) {
                 finalAdvise = "【貪生解厄訣】：剋我者因貪生而忘剋，凶氣已散大半。事情轉機在於轉換思維，主動開闢新合作模式或轉移對手矛盾，即可化險為夷。";
-            } else if (tiPercent >= 65) {
+            } else if (canFormParty && tiPercent >= 65) {
                 finalAdvise = "【體黨勢盛吉斷】：體卦黨羽眾多、體勢充盈盛大！『體黨多，體勢盛，問事皆吉』。當前氣運正隆，正宜大展宏圖，凡所謀求皆得天助人合！";
-            } else if (tiPercent <= 35) {
+            } else if (canFormParty && tiPercent <= 35) {
                 finalAdvise = "【用黨猖獗凶斷】：用卦黨羽龐大、體卦孤單衰微！『用黨多，體勢衰，問事皆凶』。此時行事如逆水行舟，宜保守防禦，勿輕信承諾，慎防財務虧損與合約陷阱。";
+            } else if (!canFormParty && tiPercent >= 65) {
+                finalAdvise = `【生扶得助吉斷】：體卦（${tiWuxing}）得外部生扶助力較多，局勢順遂可為（註：木火水不論黨多，專看本用生剋與月令）。`;
+            } else if (!canFormParty && tiPercent <= 35) {
+                finalAdvise = `【剋洩偏重警語】：體卦（${tiWuxing}）受外部剋洩耗損較重，宜保守審慎、步步為營（註：木火水不論黨多，專看本用生剋與月令）。`;
             } else {
                 finalAdvise = "【中平權衡斷語】：體用相爭、勢均力敵。事情成敗繫於人為努力與細節把握，善用互卦中的轉機，沉穩應對方能轉安。";
             }
