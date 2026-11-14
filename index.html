@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>專業易爻與梅花易排盤系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Firebase SDK (用於 Google 帳號一鍵登入與個人雲端同步) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
     <style>
         :root {
             --primary-bg: #fdfbf7;
@@ -93,6 +97,18 @@
         <header class="bg-[#8b2626] text-[#fdfbf7] py-6 px-6 text-center border-b-[6px] border-amber-800">
             <h1 class="text-3xl md:text-4xl font-bold tracking-widest">易爻排盤與數字起卦系統</h1>
             <p class="mt-2 text-amber-100 opacity-90 text-sm md:text-base">文王六爻 ‧ 梅花易數 ‧ 本互變卦詳解</p>
+            <div id="auth-header-bar" class="mt-4 flex justify-center items-center gap-2 flex-wrap">
+                <button id="btn-google-login" onclick="signInWithGoogle()" class="px-4 py-1.5 bg-white hover:bg-amber-50 text-gray-800 text-xs md:text-sm font-bold rounded-full shadow-md transition flex items-center gap-2 cursor-pointer border border-amber-200">
+                    <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+                    <span>Google 帳號一鍵登入（跨設備同步紀錄）</span>
+                </button>
+                <div id="user-profile-badge" class="hidden items-center gap-2.5 bg-black/25 px-3.5 py-1.5 rounded-full border border-amber-300/40 text-xs text-amber-50">
+                    <img id="user-avatar" src="" alt="" class="w-5 h-5 rounded-full border border-white/60 hidden">
+                    <span id="user-name" class="font-bold"></span>
+                    <span class="bg-emerald-500/80 text-white px-2 py-0.5 rounded-full text-[10px] font-bold">☁️ 雲端同步</span>
+                    <button onclick="signOutGoogle()" class="text-amber-200 hover:text-white underline ml-1 cursor-pointer">登出</button>
+                </div>
+            </div>
         </header>
 
         <div class="p-4 md:p-8">
@@ -168,11 +184,13 @@
             <!-- 我的紀錄面板 -->
             <div id="panel-records" class="hidden bg-[#f5f0e6] p-4 md:p-6 rounded-lg shadow-inner mb-6 gap-4 border border-amber-900/10 flex-col">
                 <div class="flex flex-col md:flex-row justify-between items-center border-b border-amber-900/20 pb-3 mb-2 gap-2">
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
                         <h3 class="text-lg font-bold text-amber-900">💾 我的卦象紀錄</h3>
-                        <span class="text-xs font-bold px-2 py-0.5 bg-green-100 text-green-700 rounded-full border border-green-200">本機儲存</span>
+                        <span id="storage-status-badge" class="text-xs font-bold px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full border border-green-200">💻 本機儲存（僅此設備）</span>
                     </div>
                     <div class="flex gap-2 flex-wrap">
+                        <button id="btn-sync-now" onclick="syncRecordsFromCloud(false)" class="hidden px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs rounded transition shadow">🔄 立即同步</button>
+                        <button id="btn-migrate-local" onclick="migrateLocalRecordsToCloud()" class="hidden px-3 py-1 bg-sky-600 hover:bg-sky-700 text-white text-xs rounded transition shadow">☁️ 上傳本機舊紀錄</button>
                         <button onclick="exportRecordsJson()" class="px-3 py-1 bg-amber-800 hover:bg-amber-900 text-white text-xs rounded transition shadow">📤 匯出備份 (JSON)</button>
                         <label class="px-3 py-1 bg-gray-700 hover:bg-gray-800 text-white text-xs rounded transition shadow cursor-pointer">
                             📥 匯入檔案 <input type="file" accept=".json" onchange="importRecordsFile(event)" class="hidden">
@@ -1390,43 +1408,247 @@
             9: "申時 (15-17)", 10: "酉時 (17-19)", 11: "戌時 (19-21)", 12: "亥時 (21-23)"
         };
 
-        function getStoredRecords() {
-            try {
-                let records = JSON.parse(localStorage.getItem('yijing_records_v3') || '[]');
-                let modified = false;
+        // ==================== 🔥 Firebase 雲端設定區（請貼上您的專案設定碼） ====================
+        const firebaseConfig = {
+            apiKey: "",
+            authDomain: "",
+            projectId: "",
+            storageBucket: "",
+            messagingSenderId: "",
+            appId: ""
+        };
 
-                // 自動升級舊格式的梅花易數紀錄 (補上時辰資訊)
-                records.forEach(r => {
-                    if (r.method && r.method.includes("梅花易數")) {
-                        if (!r.method.match(/(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)時/) && !r.meihua?.timeText) {
-                            const match = r.method.match(/上(\d+),\s*下(\d+),\s*動(\d+)爻/);
-                            if (match) {
-                                const n1 = parseInt(match[1]);
-                                const n2 = parseInt(match[2]);
-                                const mov = parseInt(match[3]);
-                                let deducedTimeVal = 1;
-                                for (let t = 1; t <= 12; t++) {
-                                    let m = (n1 + n2 + t) % 6 === 0 ? 6 : (n1 + n2 + t) % 6;
-                                    if (m === mov) { deducedTimeVal = t; break; }
-                                }
-                                const tText = timeNames[deducedTimeVal] || `${deducedTimeVal}時`;
-                                r.method = `梅花易數 (上${n1}, 下${n2}, ${tText}, 動${mov}爻)`;
-                                if (!r.meihua) {
-                                    r.meihua = {
-                                        num1: n1,
-                                        num2: n2,
-                                        timeVal: deducedTimeVal,
-                                        timeText: tText,
-                                        movingLine: mov
-                                    };
-                                }
-                                modified = true;
-                            }
+        let currentUser = null;
+        let db = null;
+        let cloudRecordsCache = null;
+
+        function isFirebaseConfigured() {
+            return Boolean(firebaseConfig && firebaseConfig.apiKey && firebaseConfig.projectId && typeof firebase !== 'undefined');
+        }
+
+        function initFirebase() {
+            if (!isFirebaseConfigured()) return;
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                db = firebase.firestore();
+                firebase.auth().onAuthStateChanged(async (user) => {
+                    currentUser = user || null;
+                    updateAuthUI();
+                    if (user) {
+                        await syncRecordsFromCloud(true);
+                    } else {
+                        cloudRecordsCache = null;
+                        updateRecordBadge();
+                        const recPanel = document.getElementById('panel-records');
+                        if (recPanel && !recPanel.classList.contains('hidden')) {
+                            loadRecordsList();
                         }
                     }
                 });
+            } catch (err) {
+                console.warn("Firebase 初始化略過:", err);
+            }
+        }
 
-                if (modified) {
+        function updateAuthUI() {
+            const btnLogin = document.getElementById('btn-google-login');
+            const profileBadge = document.getElementById('user-profile-badge');
+            const userAvatar = document.getElementById('user-avatar');
+            const userName = document.getElementById('user-name');
+            const statusBadge = document.getElementById('storage-status-badge');
+            const btnSyncNow = document.getElementById('btn-sync-now');
+            const btnMigrate = document.getElementById('btn-migrate-local');
+
+            if (currentUser) {
+                if (btnLogin) btnLogin.classList.add('hidden');
+                if (profileBadge) {
+                    profileBadge.classList.remove('hidden');
+                    profileBadge.classList.add('flex');
+                }
+                if (userName) userName.innerText = currentUser.displayName || currentUser.email || "已登入";
+                if (userAvatar) {
+                    if (currentUser.photoURL) {
+                        userAvatar.src = currentUser.photoURL;
+                        userAvatar.classList.remove('hidden');
+                    } else {
+                        userAvatar.classList.add('hidden');
+                    }
+                }
+                if (statusBadge) {
+                    statusBadge.className = "text-xs font-bold px-2.5 py-0.5 bg-emerald-100 text-emerald-800 rounded-full border border-emerald-300";
+                    statusBadge.innerText = `☁️ Google 雲端同步 (${currentUser.email || currentUser.displayName})`;
+                }
+                if (btnSyncNow) btnSyncNow.classList.remove('hidden');
+            } else {
+                if (btnLogin) btnLogin.classList.remove('hidden');
+                if (profileBadge) {
+                    profileBadge.classList.add('hidden');
+                    profileBadge.classList.remove('flex');
+                }
+                if (statusBadge) {
+                    statusBadge.className = "text-xs font-bold px-2.5 py-0.5 bg-green-100 text-green-700 rounded-full border border-green-200";
+                    statusBadge.innerText = "💻 本機儲存（僅此設備）";
+                }
+                if (btnSyncNow) btnSyncNow.classList.add('hidden');
+                if (btnMigrate) btnMigrate.classList.add('hidden');
+            }
+        }
+
+        async function signInWithGoogle() {
+            if (!isFirebaseConfigured()) {
+                alert("⚠️ 尚未填入 Firebase 設定碼！\n\n請先依照教學在 Firebase 免費建立專案，並將您的 firebaseConfig 貼進 index.html 的設定區，即可啟用「Google 帳號一鍵登入」跨設備自動同步！");
+                return;
+            }
+            if (!db) initFirebase();
+            try {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                await firebase.auth().signInWithPopup(provider);
+            } catch (err) {
+                if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
+                    const provider = new firebase.auth.GoogleAuthProvider();
+                    firebase.auth().signInWithRedirect(provider);
+                } else if (err.code !== 'auth/popup-closed-by-user') {
+                    alert("❌ Google 登入失敗：" + (err.message || err));
+                }
+            }
+        }
+
+        async function signOutGoogle() {
+            if (!isFirebaseConfigured()) return;
+            try {
+                await firebase.auth().signOut();
+                alert("✅ 已登出 Google 帳號，目前切換回本機儲存模式。");
+            } catch (err) {
+                alert("❌ 登出失敗：" + (err.message || err));
+            }
+        }
+
+        async function syncRecordsFromCloud(promptMigrate = false) {
+            if (!currentUser || !db) return;
+            try {
+                const snapshot = await db.collection('users').doc(currentUser.uid).collection('records').orderBy('id', 'desc').get();
+                const list = [];
+                snapshot.forEach(doc => list.push(doc.data()));
+                cloudRecordsCache = upgradeRecordsList(list);
+
+                const localRaw = JSON.parse(localStorage.getItem('yijing_records_v3') || '[]');
+                const cloudIds = new Set(cloudRecordsCache.map(r => String(r.id)));
+                const localOnly = localRaw.filter(r => !cloudIds.has(String(r.id)));
+
+                const btnMigrate = document.getElementById('btn-migrate-local');
+                if (localOnly.length > 0) {
+                    if (btnMigrate) {
+                        btnMigrate.innerText = `☁️ 上傳本機舊紀錄 (${localOnly.length})`;
+                        btnMigrate.classList.remove('hidden');
+                    }
+                    if (promptMigrate && confirm(`偵測到這台設備的本機有 ${localOnly.length} 筆尚未上傳的舊紀錄，是否立即一鍵匯入到您的 Google 雲端帳號？（匯入後所有設備都能共用）`)) {
+                        await migrateLocalRecordsToCloud();
+                    }
+                } else {
+                    if (btnMigrate) btnMigrate.classList.add('hidden');
+                }
+
+                updateRecordBadge();
+                const recPanel = document.getElementById('panel-records');
+                if (recPanel && !recPanel.classList.contains('hidden')) {
+                    loadRecordsList();
+                }
+            } catch (err) {
+                console.error("雲端同步失敗:", err);
+                alert("❌ 雲端資料讀取失敗，請確認網路連線或 Firestore 安全規則設定。\n錯誤：" + (err.message || err));
+            }
+        }
+
+        async function migrateLocalRecordsToCloud() {
+            if (!currentUser || !db) return;
+            try {
+                const localRaw = upgradeRecordsList(JSON.parse(localStorage.getItem('yijing_records_v3') || '[]'));
+                const cloudIds = new Set((cloudRecordsCache || []).map(r => String(r.id)));
+                const toUpload = localRaw.filter(r => !cloudIds.has(String(r.id)));
+                if (toUpload.length === 0) {
+                    alert("本機沒有需要上傳的新紀錄！");
+                    return;
+                }
+                const batch = db.batch();
+                const colRef = db.collection('users').doc(currentUser.uid).collection('records');
+                toUpload.forEach(rec => {
+                    batch.set(colRef.doc(String(rec.id)), rec);
+                });
+                await batch.commit();
+                cloudRecordsCache = [...toUpload, ...(cloudRecordsCache || [])].sort((a, b) => b.id - a.id);
+                const btnMigrate = document.getElementById('btn-migrate-local');
+                if (btnMigrate) btnMigrate.classList.add('hidden');
+                updateRecordBadge();
+                loadRecordsList();
+                alert(`✅ 成功將 ${toUpload.length} 筆本機紀錄上傳至您的 Google 雲端！`);
+            } catch (err) {
+                alert("❌ 上傳失敗：" + (err.message || err));
+            }
+        }
+
+        async function pushRecordToCloud(record) {
+            if (!currentUser || !db) return;
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('records').doc(String(record.id)).set(record);
+            } catch (err) {
+                console.error("雲端寫入失敗:", err);
+                alert("⚠️ 雲端儲存失敗：" + (err.message || err));
+            }
+        }
+
+        async function deleteRecordFromCloud(id) {
+            if (!currentUser || !db) return;
+            try {
+                await db.collection('users').doc(currentUser.uid).collection('records').doc(String(id)).delete();
+            } catch (err) {
+                console.error("雲端刪除失敗:", err);
+            }
+        }
+
+        function upgradeRecordsList(records) {
+            if (!Array.isArray(records)) return [];
+            records.forEach(r => {
+                if (r.method && r.method.includes("梅花易數")) {
+                    if (!r.method.match(/(?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)時/) && !r.meihua?.timeText) {
+                        const match = r.method.match(/上(\d+),\s*下(\d+),\s*動(\d+)爻/);
+                        if (match) {
+                            const n1 = parseInt(match[1]);
+                            const n2 = parseInt(match[2]);
+                            const mov = parseInt(match[3]);
+                            let deducedTimeVal = 1;
+                            for (let t = 1; t <= 12; t++) {
+                                let m = (n1 + n2 + t) % 6 === 0 ? 6 : (n1 + n2 + t) % 6;
+                                if (m === mov) { deducedTimeVal = t; break; }
+                            }
+                            const tText = timeNames[deducedTimeVal] || `${deducedTimeVal}時`;
+                            r.method = `梅花易數 (上${n1}, 下${n2}, ${tText}, 動${mov}爻)`;
+                            if (!r.meihua) {
+                                r.meihua = {
+                                    num1: n1,
+                                    num2: n2,
+                                    timeVal: deducedTimeVal,
+                                    timeText: tText,
+                                    movingLine: mov
+                                };
+                            }
+                        }
+                    }
+                }
+            });
+            return records;
+        }
+
+        function getStoredRecords() {
+            if (currentUser && cloudRecordsCache !== null) {
+                return cloudRecordsCache;
+            }
+            try {
+                let records = JSON.parse(localStorage.getItem('yijing_records_v3') || '[]');
+                const beforeStr = JSON.stringify(records);
+                records = upgradeRecordsList(records);
+                if (JSON.stringify(records) !== beforeStr) {
                     localStorage.setItem('yijing_records_v3', JSON.stringify(records));
                 }
                 return records;
@@ -1436,7 +1658,11 @@
         }
 
         function setStoredRecords(records) {
-            localStorage.setItem('yijing_records_v3', JSON.stringify(records));
+            if (currentUser && cloudRecordsCache !== null) {
+                cloudRecordsCache = records;
+            } else {
+                localStorage.setItem('yijing_records_v3', JSON.stringify(records));
+            }
             updateRecordBadge();
         }
 
@@ -1471,8 +1697,9 @@
             const records = getStoredRecords();
             records.unshift(record);
             setStoredRecords(records);
+            pushRecordToCloud(record);
 
-            alert(`✅ 儲存成功！已記錄「${title}」`);
+            alert(`✅ 儲存成功！${currentUser ? '已同步至您的 Google 雲端：' : '已記錄'}「${title}」`);
             titleInput.value = "";
             if (notesInput) notesInput.value = "";
             document.getElementById('save-action-panel').classList.add('hidden');
@@ -1565,6 +1792,7 @@
             }
 
             setStoredRecords(records);
+            pushRecordToCloud(record);
             closeEditModal();
             loadRecordsList();
             alert("✅ 紀錄資料與備註已成功更新！");
@@ -1721,12 +1949,24 @@
             if (!confirm("確定要刪除這筆排盤紀錄嗎？")) return;
             const records = getStoredRecords().filter(r => r.id !== id);
             setStoredRecords(records);
+            deleteRecordFromCloud(id);
             loadRecordsList();
         }
 
-        function clearAllRecords() {
+        async function clearAllRecords() {
             if (!confirm("⚠️ 警告：這將徹底清除所有儲存的卦象紀錄，確定要清空嗎？")) return;
+            const oldRecords = getStoredRecords();
             setStoredRecords([]);
+            if (currentUser && db && oldRecords.length > 0) {
+                try {
+                    const batch = db.batch();
+                    const colRef = db.collection('users').doc(currentUser.uid).collection('records');
+                    oldRecords.forEach(r => batch.delete(colRef.doc(String(r.id))));
+                    await batch.commit();
+                } catch (err) {
+                    console.error("清空雲端失敗:", err);
+                }
+            }
             loadRecordsList();
         }
 
@@ -1757,6 +1997,12 @@
                         const merged = [...data, ...existing];
                         const unique = Array.from(new Map(merged.map(item => [item.id, item])).values());
                         setStoredRecords(unique);
+                        if (currentUser && db) {
+                            const batch = db.batch();
+                            const colRef = db.collection('users').doc(currentUser.uid).collection('records');
+                            unique.forEach(item => batch.set(colRef.doc(String(item.id)), item));
+                            batch.commit().catch(err => console.error("匯入同步雲端失敗:", err));
+                        }
                         alert(`✅ 成功匯入！目前共有 ${unique.length} 筆紀錄。`);
                         loadRecordsList();
                     } else {
@@ -1770,6 +2016,7 @@
             event.target.value = "";
         }
 
+        initFirebase();
         updateRecordBadge();
         resetDivination();
     </script>
