@@ -507,6 +507,7 @@
                         <div class="mt-auto w-full bg-amber-50/70 p-3 rounded text-sm text-gray-700 leading-relaxed border border-amber-100 min-h-[96px]">
                             <span class="font-bold text-amber-900">卦辭：</span><span id="changed-desc"></span>
                         </div>
+                        <div id="changed-yong-ying-box" class="hidden w-full mt-3"></div>
                     </div>
                 </div>
 
@@ -745,6 +746,98 @@
             { name: "巽", wuxing: "木", yinyang: "－", yyWuxing: "－木", yyTrait: "柔順滲透" },
             { name: "乾", wuxing: "金", yinyang: "＋", yyWuxing: "＋金", yyTrait: "剛健峻拔" }
         ];
+
+        // 體用關係 - 八卦生剋吉凶應事對照
+        const trigramYingShi = {
+            "乾": {
+                ji: "長官、長輩提攜關照、貴人相助、公門之喜、升官發財。",
+                xiong: "官場是非、官災、因公致禍、為長輩煩憂、功名難成、貴人不顯、頭面之疾、財務糾紛。"
+            },
+            "坤": {
+                ji: "田產、屋宅之喜、得眾人之擁護、得女性之助、群體得利、穩定求利、農產／土地獲利。",
+                xiong: "田土、屋宅之憂、農務欠收、諸事延滯、謀求受阻、小人（陰人）陷害、脾胃之疾、為妻、母煩憂。"
+            },
+            "震": {
+                ji: "動中求利（跑車）、鬧中取財（集市）、聲名遠播、兄長之助，利東方。",
+                xiong: "謀動難成、動則得咎、驚嚇恐懼、地震、雷電之災、意外之災、手足損傷、肝膽之疾、家宅不安、不利東方。"
+            },
+            "巽": {
+                ji: "合約之喜，好消息、草木花卉之利、手藝、教育，文筆生財，出國出差吉利。",
+                xiong: "糾纏不斷，壞消息、風寒感冒、傳染病、肝膽之疾，合約糾紛。"
+            },
+            "坎": {
+                ji: "水酒之利、酒食宴席、娛樂旅遊、得意外之利、偏門得益、智慧取財、利北方。",
+                xiong: "陰陷小人之災、盜匪之災、因酒色生災、牢獄之災、溺水之險、腰腎之疾、不利北方。"
+            },
+            "離": {
+                ji: "求名順遂、簽約順利、求學順利、醫美順、網絡發展、影視得利、大利南方。",
+                xiong: "文書契約之擾、火災、燒燙傷、離婚、證件遺失、心臟血管之疾、眼目之疾、不利南方。"
+            },
+            "艮": {
+                ji: "田土之利、山野礦產之利、靜守有成、事緩則圓、事有始終、大利東北。",
+                xiong: "山林田土之災、諸事延滯、阻隔、壓力大、墳墓之憂、鬼魅作祟、脾胃之疾、不利東北。"
+            },
+            "兌": {
+                ji: "喜悅之事、酒食之筵、開口生財。",
+                xiong: "主口舌之災、爭吵、毀損、破裂、錢財糾紛、病從口入、飲食有傷、血光之災、動刀、插管。"
+            }
+        };
+
+        function renderChangedYongYingBox(yongGua, tiWuxing, yongWuxing) {
+            const box = document.getElementById('changed-yong-ying-box');
+            if (!box || !yongGua || !trigramYingShi[yongGua.name]) {
+                if (box) box.classList.add('hidden');
+                return;
+            }
+            const info = trigramYingShi[yongGua.name];
+            const rel = getTiYongRelation(tiWuxing, yongWuxing);
+            const relTag = rel ? rel.text.split(" ")[0] : "";
+
+            // 判斷吉應或凶應：用生體、體用比和、體剋用 -> 吉應；用剋體、體生用 -> 凶應
+            let isJi = true;
+            let verdictBadge = "";
+            let boxTheme = "";
+            if (relTag === "用生體") {
+                isJi = true;
+                verdictBadge = "✨ 用生體 ‧ 吉應";
+                boxTheme = "bg-emerald-50/90 border-emerald-300 text-emerald-950";
+            } else if (relTag === "體用比和") {
+                isJi = true;
+                verdictBadge = "✨ 體用比和 ‧ 吉應";
+                boxTheme = "bg-emerald-50/90 border-emerald-300 text-emerald-950";
+            } else if (relTag === "體剋用") {
+                isJi = true;
+                verdictBadge = "✨ 體剋用 ‧ 吉應（須費力可得）";
+                boxTheme = "bg-teal-50/90 border-teal-300 text-teal-950";
+            } else if (relTag === "體生用") {
+                isJi = false;
+                verdictBadge = "⚠️ 體生用 ‧ 耗洩凶應";
+                boxTheme = "bg-amber-50/95 border-amber-300 text-amber-950";
+            } else {
+                isJi = false;
+                verdictBadge = "🚨 用剋體 ‧ 凶應";
+                boxTheme = "bg-rose-50/95 border-rose-300 text-rose-950";
+            }
+
+            const mainLabel = isJi ? "吉應" : "凶應";
+            const mainText = isJi ? info.ji : info.xiong;
+            const altLabel = isJi ? "凶應" : "吉應";
+            const altText = isJi ? info.xiong : info.ji;
+
+            box.className = `w-full mt-3 p-3 rounded-lg border-2 shadow-xs text-left ${boxTheme}`;
+            box.innerHTML = `
+                <div class="flex items-center justify-between gap-2 flex-wrap mb-1.5">
+                    <span class="text-xs font-extrabold tracking-wide">📌 變卦用卦【${yongGua.name}卦（${yongGua.yyWuxing}）】${mainLabel}</span>
+                    <span class="text-[11px] font-extrabold px-2 py-0.5 rounded bg-white/80 border border-current/20">${verdictBadge}</span>
+                </div>
+                <div class="text-xs sm:text-sm font-semibold leading-relaxed">${mainText}</div>
+                <details class="mt-2 pt-1.5 border-t border-current/15 text-xs opacity-80">
+                    <summary class="cursor-pointer font-bold hover:opacity-100 select-none">查看【${yongGua.name}卦】${altLabel}對照</summary>
+                    <div class="mt-1 leading-relaxed">${altLabel}：${altText}</div>
+                </details>
+            `;
+            box.classList.remove('hidden');
+        }
 
         function getYinYangStrengthCompare(up, low, upTY, lowTY) {
             const upYY = up.yinyang;
@@ -1753,12 +1846,16 @@
                 renderTiYongUI('changed-ti-yong-relation', changedTiWuxing, changedYongWuxing);
                 document.getElementById('changed-desc').innerText = hexagramDesc[changedHex.name] || "查無卦辭。";
                 renderHexagramLinesWithTrigrams(changedContainer, changedHex.binaryArray, changedHex.upperVal, changedHex.lowerVal, changedUpperTiYong, changedLowerTiYong);
+                const changedYongIdx = (tiPosition === "upper") ? changedHex.lowerVal : changedHex.upperVal;
+                renderChangedYongYingBox(trigramData[changedYongIdx], changedTiWuxing, changedYongWuxing);
             } else {
                 document.getElementById('changed-hex-name').innerText = "靜卦 (無變)";
                 document.getElementById('changed-wuxing').innerHTML = `<div class="text-xs text-gray-400 mt-2 p-2 text-center bg-gray-50 rounded border border-gray-200 w-full">六爻皆靜，專看本卦卦辭與彖象。</div>`;
                 document.getElementById('changed-ti-yong-relation').classList.add('hidden');
                 document.getElementById('changed-desc').innerText = "本卦純靜無變爻，以本卦卦辭斷其吉凶。";
                 changedContainer.innerHTML = `<div class="h-44 flex items-center justify-center text-xs text-gray-400">--- 無動爻變動 ---</div>`;
+                const changedYongBox = document.getElementById('changed-yong-ying-box');
+                if (changedYongBox) changedYongBox.classList.add('hidden');
             }
 
             const origContainer = document.getElementById('orig-lines');
