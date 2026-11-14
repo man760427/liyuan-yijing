@@ -659,8 +659,15 @@
         };
 
         const wuxingColors = {
-            "木": "text-emerald-700", "火": "text-red-600", "土": "text-amber-700",
-            "金": "text-amber-500", "水": "text-blue-600"
+            "木": "text-emerald-700", "火": "text-red-600", "土": "text-amber-900",
+            "金": "text-yellow-600", "水": "text-blue-600"
+        };
+        const wuxingBadgeColors = {
+            "木": "bg-emerald-50 text-emerald-800 border-emerald-300",
+            "火": "bg-red-50 text-red-700 border-red-300",
+            "土": "bg-amber-100/80 text-amber-950 border-amber-400",
+            "金": "bg-yellow-50 text-yellow-700 border-yellow-400",
+            "水": "bg-blue-50 text-blue-700 border-blue-300"
         };
 
         const yaoNames = ["初爻", "二爻", "三爻", "四爻", "五爻", "上爻"];
@@ -1356,11 +1363,11 @@
 
                 return `
                     <div class="flex flex-col text-sm text-gray-700 bg-gray-50/80 p-2.5 rounded border border-gray-200 w-full">
-                        <div class="flex justify-between items-center mb-1 gap-1 flex-wrap">
-                            <span>上卦：${up.name} <span class="text-gray-300 mx-0.5">|</span> ${upWuxingSpan}</span> ${formatTiYong(upTY)}
+                        <div class="flex justify-between items-center mb-1.5 gap-1 flex-wrap">
+                            <span class="flex items-center gap-1 flex-wrap">上卦：<span class="inline-block font-extrabold text-base px-1.5 py-0.5 rounded border shadow-2xs ${wuxingBadgeColors[up.wuxing]}">${up.name}</span> <span class="text-gray-300">|</span> ${upWuxingSpan}</span> ${formatTiYong(upTY)}
                         </div>
                         <div class="flex justify-between items-center gap-1 flex-wrap">
-                            <span>下卦：${low.name} <span class="text-gray-300 mx-0.5">|</span> ${lowWuxingSpan}</span> ${formatTiYong(lowTY)}
+                            <span class="flex items-center gap-1 flex-wrap">下卦：<span class="inline-block font-extrabold text-base px-1.5 py-0.5 rounded border shadow-2xs ${wuxingBadgeColors[low.wuxing]}">${low.name}</span> <span class="text-gray-300">|</span> ${lowWuxingSpan}</span> ${formatTiYong(lowTY)}
                         </div>
                         ${relHtml}
                         ${yyHtml}
