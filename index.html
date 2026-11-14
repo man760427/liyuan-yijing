@@ -190,7 +190,7 @@
                 <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-5 border border-amber-900/20 fade-in max-h-[90vh] overflow-y-auto">
                     <div class="flex justify-between items-center pb-3 border-b border-gray-200 mb-4">
                         <h4 class="font-bold text-amber-900 text-base flex items-center gap-2">
-                            ✏️ 編輯歷史紀錄（天數、地數、時辰、月令與備註）
+                            ✏️ 編輯歷史紀錄（第一數、第二數、時辰、月令與備註）
                         </h4>
                         <button onclick="closeEditModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
                     </div>
@@ -202,15 +202,15 @@
                         </div>
                         <div id="edit-meihua-fields" class="space-y-3 p-3 bg-amber-50/70 rounded-lg border border-amber-200">
                             <div class="text-xs font-bold text-amber-900 flex items-center gap-1">
-                                <span>梅花易數天地時辰參數</span>
+                                <span>梅花易數起卦參數</span>
                             </div>
                             <div class="grid grid-cols-2 gap-2">
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">🌌 天數 (上卦數字)</label>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">🔢 第一數 (上卦)</label>
                                     <input type="number" id="edit-num1" class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-amber-700 bg-white">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1">🌍 地數 (下卦數字)</label>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1">🔢 第二數 (下卦)</label>
                                     <input type="number" id="edit-num2" class="w-full px-3 py-1.5 border border-gray-300 rounded text-sm outline-none focus:border-amber-700 bg-white">
                                 </div>
                             </div>
@@ -1243,7 +1243,7 @@
             const previewEl = document.getElementById('save-summary-preview');
             if (previewEl) {
                 if (lastMeihuaParams) {
-                    previewEl.innerText = `🌌 天數: ${lastMeihuaParams.num1} | 🌍 地數: ${lastMeihuaParams.num2} | ⏰ 時辰: ${lastMeihuaParams.timeText} | 🌿 月令: ${currentMonthWuxing ? currentMonthWuxing + '氣當令' : '未指定'}`;
+                    previewEl.innerText = `🔢 第一數: ${lastMeihuaParams.num1} | 🔢 第二數: ${lastMeihuaParams.num2} | ⏰ 時辰: ${lastMeihuaParams.timeText} | 🌿 月令: ${currentMonthWuxing ? currentMonthWuxing + '氣當令' : '未指定'}`;
                 } else {
                     previewEl.innerText = `六爻起卦 | 🌿 月令: ${currentMonthWuxing ? currentMonthWuxing + '氣當令' : '未指定'}`;
                 }
@@ -1546,7 +1546,7 @@
                         timeText: timeText,
                         movingLine: movingLine
                     };
-                    record.method = `梅花易數 (天數${num1}, 地數${num2}, ${timeText}, 動${movingLine}爻)`;
+                    record.method = `梅花易數 (第一數${num1}, 第二數${num2}, ${timeText}, 動${movingLine}爻)`;
                 }
             }
 
@@ -1578,19 +1578,19 @@
                 const dateStr = new Date(r.createdAt || r.id).toLocaleString('zh-TW', { hour12: false });
 
                 const hasMeihua = r.meihua || (r.method && r.method.includes("梅花易數"));
-                const num1Display = r.meihua?.num1 !== undefined ? r.meihua.num1 : (r.method?.match(/上(\d+)|天數(\d+)/)?.[1] || r.method?.match(/天數(\d+)/)?.[1] || "—");
-                const num2Display = r.meihua?.num2 !== undefined ? r.meihua.num2 : (r.method?.match(/下(\d+)|地數(\d+)/)?.[1] || r.method?.match(/地數(\d+)/)?.[1] || "—");
+                const num1Display = r.meihua?.num1 !== undefined ? r.meihua.num1 : (r.method?.match(/(?:上|天數|第一數)(\d+)/)?.[1] || "—");
+                const num2Display = r.meihua?.num2 !== undefined ? r.meihua.num2 : (r.method?.match(/(?:下|地數|第二數)(\d+)/)?.[1] || "—");
                 const timeDisplay = r.meihua?.timeText || (r.meihua?.timeVal ? r.meihua.timeVal + '時' : (r.method?.match(/((?:子|丑|寅|卯|辰|巳|午|未|申|酉|戌|亥)時(?:\s*\([^)]+\))?)/)?.[1] || '未註明'));
                 const movingLineDisplay = r.meihua?.movingLine !== undefined ? `第 ${r.meihua.movingLine} 爻` : (r.method?.match(/動(\d+)爻/)?.[1] ? `第 ${r.method.match(/動(\d+)爻/)[1]} 爻` : '無變爻');
 
                 const fourFactorsHtml = hasMeihua ? `
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-[#faf7f2] p-2.5 rounded-lg border border-amber-900/10 text-xs mt-2">
                         <div class="flex items-center gap-1.5">
-                            <span class="text-amber-800 font-bold">🌌 天數 (上):</span>
+                            <span class="text-amber-800 font-bold">🔢 第一數 (上卦):</span>
                             <span class="font-extrabold text-amber-950">${num1Display}</span>
                         </div>
                         <div class="flex items-center gap-1.5">
-                            <span class="text-amber-800 font-bold">🌍 地數 (下):</span>
+                            <span class="text-amber-800 font-bold">🔢 第二數 (下卦):</span>
                             <span class="font-extrabold text-amber-950">${num2Display}</span>
                         </div>
                         <div class="flex items-center gap-1.5">
